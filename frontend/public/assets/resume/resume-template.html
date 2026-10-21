@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Momin Mahmmadbhai - Full-Stack Developer (MERN) Resume</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      width: 210mm;
+      height: 297mm;
+      max-height: 297mm;
+      margin: 0 auto;
+      padding: 13mm 15mm 12mm 15mm;
+      line-height: 1.35;
+      font-size: 9.2pt;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Header Section */
+    .header {
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 9px;
+      margin-bottom: 10px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+
+    .candidate-name {
+      font-size: 20pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+
+    .candidate-title {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #2563eb;
+      letter-spacing: 0.2px;
+    }
+
+    .contact-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 14px;
+      margin-top: 5px;
+      font-size: 8.2pt;
+      color: #475569;
+    }
+
+    .contact-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: #334155;
+    }
+
+    .contact-item a {
+      color: #334155;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .contact-item a:hover {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+
+    .contact-item svg {
+      width: 11px;
+      height: 11px;
+      fill: none;
+      stroke: #2563eb;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* Section Styling */
+    .section {
+      margin-bottom: 9px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+    }
+
+    .section-title {
+      font-size: 9.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: #cbd5e1;
+    }
+
+    /* Summary */
+    .summary-text {
+      font-size: 8.6pt;
+      color: #334155;
+      line-height: 1.4;
+      text-align: justify;
+    }
+
+    /* Skills Grid */
+    .skills-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.4pt;
+    }
+
+    .skills-table tr {
+      border-bottom: 1px dashed #f1f5f9;
+    }
+
+    .skills-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .skill-cat {
+      width: 24%;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 2.5px 0;
+      vertical-align: top;
+    }
+
+    .skill-items {
+      width: 76%;
+      color: #334155;
+      padding: 2.5px 0 2.5px 8px;
+    }
+
+    .skill-items strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* Experience & Projects */
+    .entry {
+      margin-bottom: 6px;
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.5px;
+    }
+
+    .entry-role {
+      font-size: 9.2pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .entry-company {
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .entry-date {
+      font-size: 8pt;
+      font-weight: 600;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .entry-bullets {
+      list-style-type: none;
+      padding-left: 0;
+      margin-top: 1.5px;
+    }
+
+    .entry-bullets li {
+      position: relative;
+      padding-left: 12px;
+      margin-bottom: 1.5px;
+      font-size: 8.3pt;
+      color: #334155;
+      line-height: 1.34;
+    }
+
+    .entry-bullets li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #2563eb;
+      font-size: 8.5pt;
+    }
+
+    .entry-bullets li strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* Tech badge pill for projects */
+    .project-tech {
+      font-size: 7.6pt;
+      color: #0369a1;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 6px;
+      display: inline-block;
+    }
+
+    /* Education and Certifications in 2 Columns */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .edu-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #2563eb;
+      padding: 5px 9px;
+      border-radius: 4px;
+    }
+
+    .edu-degree {
+      font-size: 8.6pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .edu-inst {
+      font-size: 8pt;
+      color: #475569;
+      margin-top: 1px;
+    }
+
+    .edu-score {
+      font-size: 7.8pt;
+      font-weight: 700;
+      color: #16a34a;
+      margin-top: 2px;
+    }
+
+    .cert-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #10b981;
+      padding: 5px 9px;
+      border-radius: 4px;
+    }
+
+    .cert-title {
+      font-size: 8.6pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .cert-org {
+      font-size: 8pt;
+      color: #475569;
+      margin-top: 1px;
+    }
+
+    .cert-details {
+      font-size: 7.6pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-top">
+      <h1 class="candidate-name">Momin Mahmmadbhai</h1>
+      <span class="candidate-title">Full-Stack Developer (MERN)</span>
+    </div>
+
+    <div class="contact-bar">
+      <span class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>Sidhpur, Gujarat, India</span>
+      </span>
+      <span class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <a href="tel:+919316515672">+91 93165 15672</a>
+      </span>
+      <span class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        <a href="mailto:mhd.developer10@gmail.com">mhd.developer10@gmail.com</a>
+      </span>
+      <span class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+        <a href="https://www.linkedin.com/in/momin-mahmmadbhai-3b482836b/">linkedin.com/in/momin-mahmmadbhai</a>
+      </span>
+      <span class="contact-item">
+        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        <a href="https://github.com/mhd-coder-10">github.com/mhd-coder-10</a>
+      </span>
+    </div>
+  </header>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Professional Summary</h2>
+      <div class="section-line"></div>
+    </div>
+    <p class="summary-text">
+      <strong>MCA Graduate and Full-Stack Developer</strong> specializing in architecting scalable web applications, business management software, and secure RESTful APIs using <strong>React.js, Node.js, Express.js, and MongoDB</strong>. Proficient in database schema design, JWT authentication, and Role-Based Access Control (RBAC). Experienced in functional testing, API validation, and end-to-end workflow verification to deliver robust, high-performance web systems.
+    </p>
+  </section>
+
+  <!-- TECHNICAL SKILLS -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Technical Skills</h2>
+      <div class="section-line"></div>
+    </div>
+    <table class="skills-table">
+      <tr>
+        <td class="skill-cat">Frontend</td>
+        <td class="skill-items"><strong>React.js</strong>, JavaScript (ES6+), HTML5, CSS3, Tailwind CSS, Bootstrap, Responsive UI/UX Design</td>
+      </tr>
+      <tr>
+        <td class="skill-cat">Backend & APIs</td>
+        <td class="skill-items"><strong>Node.js</strong>, <strong>Express.js</strong>, RESTful APIs, MVC Architecture, Middleware Chaining, Centralized Error Handling</td>
+      </tr>
+      <tr>
+        <td class="skill-cat">Database & Storage</td>
+        <td class="skill-items"><strong>MongoDB</strong>, <strong>Mongoose ODM</strong> (Schema modeling, indexing, aggregation), MySQL (Relational queries)</td>
+      </tr>
+      <tr>
+        <td class="skill-cat">Security & Auth</td>
+        <td class="skill-items"><strong>JWT Authentication</strong>, Role-Based Access Control (RBAC), Helmet Headers, CORS, Input Sanitization & Rate-Limiting</td>
+      </tr>
+      <tr>
+        <td class="skill-cat">Testing & Tools</td>
+        <td class="skill-items"><strong>Functional Testing</strong>, <strong>API Contract Testing</strong>, Postman, Git & GitHub, npm, AI-Assisted Workflow Dev Tools</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- WORK EXPERIENCE -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Work Experience</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- Experience 1 -->
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <span class="entry-role">MERN Stack Developer</span> – <span class="entry-company">Inspire Software Co.</span>
+        </div>
+        <span class="entry-date">July 2026 – Present</span>
+      </div>
+      <ul class="entry-bullets">
+        <li><strong>Software Architecture:</strong> Designing and building custom business management software and web solutions tailored to operational requirements.</li>
+        <li><strong>Frontend Engineering:</strong> Implementing responsive, high-performance React.js user interfaces connected to optimized Express RESTful endpoints.</li>
+        <li><strong>Database Optimization:</strong> Modeling MongoDB collections and aggregation pipelines, ensuring strict schema validation and query efficiency.</li>
+        <li><strong>Quality & Reliability:</strong> Conducting functional testing, API validation, and bug triage to guarantee robust, production-ready deliverables.</li>
+      </ul>
+    </div>
+
+    <!-- Experience 2 -->
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <span class="entry-role">MERN Stack Developer</span> – <span class="entry-company">ScubeN Techlabs Inc.</span>
+        </div>
+        <span class="entry-date">Dec 2025 – May 2026</span>
+      </div>
+      <ul class="entry-bullets">
+        <li><strong>SaaS & CRM Systems:</strong> Engineered core application modules for multi-tenant business platforms using React, Node, Express, and MongoDB.</li>
+        <li><strong>Auth & Permissions:</strong> Implemented secure token-based JWT authentication combined with granular Role-Based Access Control (RBAC).</li>
+        <li><strong>API Integration:</strong> Developed structured RESTful endpoints with standardized JSON response envelopes, pagination, and error handlers.</li>
+        <li><strong>Testing & Verification:</strong> Executed end-to-end API test suites in Postman and verified client-server workflows prior to staging deployments.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FEATURED PROJECTS -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Featured Projects</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- Project 1 -->
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <span class="entry-role">AI-Powered Interview Preparation Platform</span>
+          <span class="project-tech">React · Node.js · Express · MongoDB · Gemini API · JWT · Puppeteer</span>
+        </div>
+        <span class="entry-date">Full-Stack Project</span>
+      </div>
+      <ul class="entry-bullets">
+        <li>Built an end-to-end platform featuring <strong>automated resume parsing</strong> from multi-page PDFs, skill-gap analysis, and mock interview simulations.</li>
+        <li>Integrated <strong>Google Gemini API</strong> for deterministic technical evaluation, personalized question generation, and score breakdown.</li>
+        <li>Engineered <strong>automated PDF report generation</strong> using Puppeteer and implemented strict request validations with Zod schemas.</li>
+      </ul>
+    </div>
+
+    <!-- Project 2 -->
+    <div class="entry">
+      <div class="entry-header">
+        <div>
+          <span class="entry-role">Artifest – Enterprise CRM & Business Platform</span>
+          <span class="project-tech">React.js · REST APIs · JWT Auth · RBAC · MongoDB · Node.js</span>
+        </div>
+        <span class="entry-date">Production CRM Platform</span>
+      </div>
+      <ul class="entry-bullets">
+        <li>Collaborated on a multi-module CRM managing <strong>sales lead pipelines</strong>, project tasks, digital invoicing, and team attendance tracking.</li>
+        <li>Implemented <strong>Role-Based Access Control (RBAC)</strong> across managerial roles, automated invoice workflows, and daily attendance summaries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- EDUCATION & CERTIFICATIONS -->
+  <section class="section" style="margin-bottom: 0;">
+    <div class="section-header">
+      <h2 class="section-title">Education & Certification</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="two-col-grid">
+      <div class="edu-card">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div class="edu-degree">Master of Computer Application (MCA)</div>
+          <span style="font-size: 7.8pt; font-family: 'JetBrains Mono', monospace; color: #64748b; font-weight: 600;">2024 – 2026</span>
+        </div>
+        <div class="edu-inst">Gujarat Technological University (GTU)</div>
+        <div class="edu-score">Academic Score: CPI 8.45 / 10</div>
+      </div>
+
+      <div class="cert-card">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div class="cert-title">Full-Stack Web Development Course</div>
+          <span style="font-size: 7.8pt; font-family: 'JetBrains Mono', monospace; color: #64748b; font-weight: 600;">Certified</span>
+        </div>
+        <div class="cert-org">Apna College</div>
+        <div class="cert-details">React.js, Node.js, Express, MongoDB, REST APIs, System Architecture</div>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>
