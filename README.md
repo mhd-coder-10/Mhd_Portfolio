@@ -1,296 +1,123 @@
-# Momin Mahmmadbai — Full-Stack Developer Portfolio (MERN)
+# 🚀 Momin Mahmmadbhai — Full-Stack Developer Portfolio
 
-A modern, production-grade personal portfolio website built with the **MERN Stack** (MongoDB, Express.js, React.js, Node.js). Designed with a premium dark-first aesthetic, responsive layouts, subtle animations, centralized configurations, and an MVC backend with MongoDB persistence for contact inquiries.
+A modern, high-performance personal portfolio and dynamic Content Management System (CMS) built with the **MERN Stack** (MongoDB, Express.js, React.js, Node.js).
 
----
-
-## 🚀 Technology Stack
-
-### Frontend
-- **React.js** (Plain JavaScript ES6+, JSX, React Hooks)
-- **CSS3 & Custom Design System** (CSS Variables, Glassmorphism, Responsive Grid/Flexbox)
-- **Vite** (Next-generation lightning-fast frontend tooling)
-- **Lucide Icons** & Custom SVG Icons
-- **Canvas-Confetti** (Submission celebration feedback)
-
-### Backend
-- **Node.js** (Asynchronous event-driven runtime)
-- **Express.js** (Modular MVC RESTful API framework)
-- **MongoDB & Mongoose** (Document database with schema validation & timestamps)
-- **Security Middleware**:
-  - `helmet` (HTTP security headers)
-  - `cors` (Cross-Origin Resource Sharing whitelist)
-  - `express-rate-limit` (Anti-spam protection for contact submissions)
-  - `nodemailer` (Configurable automated email notifications with graceful fallback)
+Designed with a sleek dark-mode-first aesthetic, fluid responsive layouts, micro-interactions, and a secure admin dashboard to manage portfolio content in real-time.
 
 ---
 
-## 📁 Repository Structure
+## ✨ Key Features
 
-```
-Portfolio/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── db.js                 # Mongoose connection & connection events
-│   │   │   └── env.js                # Sanitized environment variable configuration
-│   │   ├── controllers/
-│   │   │   ├── contact.controller.js # Contact submission & count endpoints
-│   │   │   └── health.controller.js  # System status & database health
-│   │   ├── middleware/
-│   │   │   ├── errorHandler.js       # Centralized JSON error responder
-│   │   │   ├── rateLimiter.js        # IP rate limiting (5 req / 15 min)
-│   │   │   └── validateContact.js    # Strict request body sanitization
-│   │   ├── models/
-│   │   │   └── contact.model.js      # Mongoose Contact model schema
-│   │   ├── routes/
-│   │   │   ├── contact.routes.js     # /api/v1/contact routes
-│   │   │   ├── health.routes.js      # /api/health route
-│   │   │   └── index.js              # Aggregated master API router
-│   │   ├── services/
-│   │   │   └── email.service.js      # Nodemailer service with safe credentials check
-│   │   ├── app.js                    # Express app configuration
-│   │   └── server.js                 # HTTP server listener & graceful shutdown
-│   ├── .env
-│   ├── .env.example
-│   └── package.json
-├── frontend/
-│   ├── public/
-│   │   ├── assets/
-│   │   │   └── resume/
-│   │   │       └── Momin-Mahmmadbai-Resume.pdf  # Downloadable resume PDF
-│   │   ├── favicon.svg
-│   │   ├── robots.txt
-│   │   └── sitemap.xml
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── BackgroundMesh.jsx    # Subtle animated glowing mesh & grid
-│   │   │   ├── Navbar.jsx            # Desktop & mobile drawer navigation
-│   │   │   ├── ProjectModal.jsx      # Accessible keyboard-controlled modal
-│   │   │   ├── ScrollToTop.jsx       # Floating scroll-to-top button
-│   │   │   ├── SectionHeader.jsx     # Reusable section heading component
-│   │   │   ├── SocialIcons.jsx       # Custom SVG icons
-│   │   │   └── ThemeToggle.jsx       # Dark / Light theme switcher
-│   │   ├── sections/
-│   │   │   ├── Hero.jsx              # Hero entrance, headline, CTAs, social links
-│   │   │   ├── About.jsx             # Bio, education credentials, core pillars
-│   │   │   ├── Experience.jsx        # Animated vertical timeline
-│   │   │   ├── Skills.jsx            # Categorized skills grid (no fake percentages)
-│   │   │   ├── Approach.jsx          # "What I Build / Development Approach"
-│   │   │   ├── Projects.jsx          # Featured project cards
-│   │   │   ├── Workflow.jsx          # AI-assisted & QA developer workflow
-│   │   │   ├── Education.jsx         # MCA GTU (8.45 CPI) & Languages
-│   │   │   ├── Certification.jsx     # Apna College Full-Stack Certification
-│   │   │   ├── Contact.jsx           # Controlled form + direct WhatsApp/Phone/Email
-│   │   │   └── Footer.jsx            # Quick links, social profiles, status
-│   │   ├── config/
-│   │   │   ├── portfolioData.js      # Single source of truth for portfolio content
-│   │   │   └── socialLinks.js        # Centralized social links & WhatsApp numbers
-│   │   ├── hooks/
-│   │   │   ├── useTheme.js           # Theme state with localStorage persistence
-│   │   │   └── useScrollSpy.js       # Active section detection
-│   │   ├── services/
-│   │   │   └── api.js                # Fetch API client for backend
-│   │   ├── styles/
-│   │   │   ├── variables.css         # Dark & light color tokens, surfaces, glows
-│   │   │   ├── animations.css        # Keyframes, hover micro-interactions
-│   │   │   └── index.css             # Resets, typography, utilities
-│   │   ├── App.jsx                   # Main layout container
-│   │   └── main.jsx                  # React DOM entry
-│   ├── index.html                    # SEO tags, OpenGraph, Google Fonts
-│   ├── vite.config.js                # Vite configuration with API proxy
-│   └── package.json
-├── .gitignore
-├── package.json                      # Workspace root scripts (concurrent dev)
-└── README.md
-```
+- **🎨 Modern & Responsive UI:** Fully responsive design across mobile, tablet, and desktop with customizable Dark / Light themes and glassmorphic cards.
+- **⚡ Dynamic Admin CMS:** Dedicated, secure admin dashboard to create, update, and delete:
+  - Projects & Featured Work
+  - Tech Skills & Expertise
+  - Work Experience & Education
+  - Certifications & Achievements
+  - Dynamic Resume upload & management
+  - Social & Contact links
+- **📬 Contact & Notification System:**
+  - Interactive contact form with client and server-side validation.
+  - Automated email notifications via Nodemailer.
+  - Real-time Telegram alerts for incoming inquiries.
+- **🛡️ Production-Grade Security:**
+  - JWT (JSON Web Token) authentication for admin sessions.
+  - Password hashing with `bcryptjs`.
+  - HTTP security headers with `helmet`.
+  - Strict CORS whitelist protection and request rate limiting.
+- **⚡ Optimized Performance:** Vite-powered frontend for instant hot-reload and optimized production bundles.
 
 ---
 
-## 🛠️ Installation & Setup
+## 🛠️ Tech Stack
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or newer; tested on v24)
-- [npm](https://www.npmjs.com/) (v9 or newer)
-- [MongoDB](https://www.mongodb.com/) (Community Server running locally on port 27017 or a MongoDB Atlas URI)
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, Vanilla CSS3 (Custom Design System), Lucide Icons, Canvas Confetti |
+| **Backend** | Node.js, Express.js, Mongoose, Multer, Helmet, CORS, Express Rate Limit |
+| **Database** | MongoDB Atlas |
+| **Authentication** | JWT (JSON Web Tokens), Bcrypt.js |
+| **Notifications** | Nodemailer (Gmail SMTP), Telegram Bot API |
+| **Deployment** | Vercel (Frontend), Render (Backend), MongoDB Atlas (Database) |
 
-### 1. Clone & Install Dependencies
-Run the following from the project root:
+---
 
+## 🚀 Getting Started Locally
+
+### 1. Clone the Repository
 ```bash
-# Install all root, backend, and frontend packages with one command:
+git clone https://github.com/mhd-coder-10/Mhd_Portfolio.git
+cd Mhd_Portfolio
+```
+
+### 2. Install Dependencies
+Install dependencies for root, backend, and frontend with a single command:
+```bash
 npm run install:all
 ```
 
-Or install individually:
-```bash
-# Backend
-cd backend
-npm install
+### 3. Environment Variables Setup
 
-# Frontend
-cd ../frontend
-npm install
-```
-
----
-
-## ⚙️ Environment Variables
-
-### Backend (`backend/.env`)
-Create `backend/.env` using `backend/.env.example` as reference:
-
+Create a `.env` file in the **`backend`** directory (refer to `backend/.env.example`):
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://127.0.0.1:27017/portfolio_db
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 
-# Optional Email Notification Configuration (e.g. Gmail App Password)
-# If left blank, contact submissions are still stored in MongoDB without errors.
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=
-EMAIL_PASSWORD=
-CONTACT_EMAIL=mhd.developer10@gmail.com
+# Optional: Email & Telegram Notifications
+EMAIL_SERVICE=gmail
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_email_app_password
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
 ```
 
-### Frontend (`frontend/.env`) [Optional for production]
+Create a `.env` file in the **`frontend`** directory (refer to `frontend/.env.example`):
 ```env
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=http://localhost:5000
 ```
-*(In local development, requests to `/api/*` are automatically proxied to `http://localhost:5000` via Vite).*
 
----
-
-## 🏃 Running the Application
-
-### Option A: Run Both Together (Recommended)
-From the project root:
+### 4. Run the Project
+Start both frontend and backend concurrently:
 ```bash
 npm run dev
 ```
-This runs both the Express API (`http://localhost:5000`) and the Vite React frontend (`http://localhost:5173`) concurrently.
 
-### Option B: Run Separately
-```bash
-# Terminal 1 - Backend Server:
-cd backend
-npm run dev
-
-# Terminal 2 - Frontend Development Server:
-cd frontend
-npm run dev
-```
-
-Visit the website in your browser at:
-👉 **`http://localhost:5173`**
+- **Frontend:** `http://localhost:5173`
+- **Backend API:** `http://localhost:5000`
+- **Admin Panel:** `http://localhost:5173/admin/login`
 
 ---
 
-## 📡 REST API Documentation
+## 🚢 Deployment Overview
 
-### 1. Health Check
-- **Endpoint**: `GET /api/health`
-- **Description**: Returns API uptime, timestamp, and MongoDB connection status.
-- **Sample Response**:
-  ```json
-  {
-    "success": true,
-    "status": "healthy",
-    "message": "Momin Mahmmadbai Portfolio API is operational",
-    "timestamp": "2026-09-21T17:41:52.928Z",
-    "uptime": 124.5,
-    "database": {
-      "status": "connected"
-    }
-  }
-  ```
+### Frontend on Vercel
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Environment Variable:**  
+  `VITE_API_BASE_URL` = `https://your-backend.onrender.com`
 
-### 2. Submit Contact Form
-- **Endpoint**: `POST /api/v1/contact` (also aliased to `POST /api/contact`)
-- **Rate Limit**: Maximum 5 submissions per 15 minutes per IP address.
-- **Payload**:
-  ```json
-  {
-    "name": "Alex Vance",
-    "email": "alex@example.com",
-    "phone": "+91 9316515672",
-    "subject": "Full-Stack Opportunity Inquiry",
-    "message": "Hi Momin, we reviewed your projects and would love to discuss a developer position."
-  }
-  ```
-- **Validation Rules**:
-  - `name`: String, 2 to 100 characters (Required)
-  - `email`: Valid email format, max 150 characters (Required)
-  - `phone`: String, max 25 characters (Optional)
-  - `subject`: String, 3 to 200 characters (Required)
-  - `message`: String, 10 to 3000 characters (Required)
-- **Sample Success Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "Thank you for reaching out! Your message has been received successfully. I will get back to you shortly.",
-    "data": {
-      "id": "673f8b0124c1f938b29f9e11",
-      "createdAt": "2026-09-21T17:42:57.123Z"
-    }
-  }
-  ```
-
-### 3. Contact Message Status / Counter
-- **Endpoint**: `GET /api/v1/contact/status`
-- **Description**: Returns total message count received.
+### Backend on Render
+- **Root Directory:** `backend`
+- **Build Command:** `npm install`
+- **Start Command:** `npm start`
+- **Environment Variables:** Set your `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, etc.
 
 ---
 
-## 🔗 Centralized Social Profiles Configuration
+## 👨‍💻 Author
 
-To update personal profile URLs (GitHub, LinkedIn, Instagram), open:
-**`frontend/src/config/socialLinks.js`**
+**Momin Mahmmadbhai**  
+Full-Stack Developer (MERN Stack)
 
-```javascript
-export const socialLinks = {
-  // Add your actual URLs here:
-  github: "https://github.com/your-username",
-  linkedin: "https://linkedin.com/in/your-username",
-  instagram: "https://instagram.com/your-username",
-
-  // Already configured:
-  email: "mailto:mhd.developer10@gmail.com",
-  phone: "tel:9316515672",
-  whatsapp: "https://wa.me/919316515672?text=..."
-};
-```
+- **GitHub:** [@mhd-coder-10](https://github.com/mhd-coder-10)
+- **Email:** [mhd.developer10@gmail.com](mailto:mhd.developer10@gmail.com)
 
 ---
 
-## 📄 Downloadable Resume
-
-The resume file is located at:
-**`frontend/public/assets/resume/Momin-Mahmmadbai-Resume.pdf`**
-
-You can replace this starter PDF at any time with your updated resume without modifying any frontend code.
-
----
-
-## 🚢 Deployment Guide
-
-### Frontend Deployment (Vercel / Netlify)
-1. Set the root directory to `frontend`.
-2. Build command: `npm run build`
-3. Output directory: `dist`
-4. Set Environment Variable:
-   - `VITE_API_BASE_URL`: `https://your-backend-service.onrender.com`
-
-### Backend Deployment (Render / Railway / Heroku)
-1. Set root directory to `backend`.
-2. Build command: `npm install`
-3. Start command: `node src/server.js`
-4. Set Environment Variables:
-   - `NODE_ENV`: `production`
-   - `PORT`: `5000` (or dynamically assigned)
-   - `MONGODB_URI`: `mongodb+srv://<user>:<password>@cluster0.mongodb.net/portfolio_db`
-   - `CLIENT_URL`: `https://your-frontend.vercel.app`
-   - `EMAIL_USER`: `your-email@gmail.com`
-   - `EMAIL_PASSWORD`: `your-app-password`
+## 📄 License
+This project is licensed under the [ISC License](LICENSE).
