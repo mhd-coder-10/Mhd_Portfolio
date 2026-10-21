@@ -50,9 +50,8 @@ npm run install:all
 ```
 
 ### 2. Environment Variables
-- Create `.env` inside `backend/` (MongoDB URI, JWT secret, Admin email & password, Port).
-- Create `.env` inside `frontend/` (Vite API base URL).
-*(Check `.env.example` in both folders for reference).*
+- Create `.env` inside `backend/` using `backend/.env.example` as a template (MongoDB URI, JWT secret, Admin email & password, Port).
+- `frontend/.env` is already pre-configured for development.
 
 ### 3. Start Application
 ```bash
