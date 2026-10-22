@@ -28,9 +28,10 @@ export const AdminResume = () => {
   const { refreshPortfolio } = usePortfolioData();
 
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
 
   const [resumeData, setResumeData] = useState({
@@ -60,14 +61,20 @@ export const AdminResume = () => {
 
   useEffect(() => {
     fetchResumeSettings();
+    return () => {
+      if (pendingPreviewUrl) {
+        URL.revokeObjectURL(pendingPreviewUrl);
+      }
+    };
   }, []);
 
-  const handleFileUpload = async (e) => {
+  // When a user selects a file from disk, stage it locally without uploading yet
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      showToast('Only PDF documents are allowed for resume upload.', 'error');
+      showToast('Only PDF documents are allowed for resume.', 'error');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -78,58 +85,98 @@ export const AdminResume = () => {
       return;
     }
 
-    setUploading(true);
-    try {
-      const res = await adminUploadResume(token, file, resumeData?.url);
-      if (res.success && res.data) {
-        const updated = {
-          ...resumeData,
-          url: res.data.url,
-          fileName: res.data.fileName || file.name,
-          fileSize: res.data.fileSize || `${Math.round(file.size / 1024)} KB`,
-          isDownloadActive: true,
-        };
-        setResumeData(updated);
-
-        // Auto-save resume settings with new URL
-        await adminUpdateResumeSettings(token, updated);
-        showToast('Resume uploaded and activated successfully!', 'success');
-        refreshPortfolio();
-      }
-    } catch (err) {
-      showToast(err.message || 'Failed to upload resume file.', 'error');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    // Revoke previous blob preview if any
+    if (pendingPreviewUrl) {
+      URL.revokeObjectURL(pendingPreviewUrl);
     }
+
+    const blobUrl = URL.createObjectURL(file);
+    setPendingFile(file);
+    setPendingPreviewUrl(blobUrl);
+
+    // Auto-fill input fields so the user immediately sees the chosen file details
+    setResumeData((prev) => ({
+      ...prev,
+      fileName: file.name,
+      fileSize: `${Math.round(file.size / 1024)} KB`,
+      isDownloadActive: true,
+    }));
+
+    showToast('File selected. Click "Save Settings" to upload and apply.', 'info');
   };
 
+  // Upload to Cloudinary and update database ONLY when Save Settings button is clicked
   const handleSaveSettings = async (e) => {
     if (e) e.preventDefault();
     setSaving(true);
     try {
-      const res = await adminUpdateResumeSettings(token, resumeData);
+      let finalUrl = resumeData.url;
+
+      // If a new PDF was selected, upload it to Cloudinary now
+      if (pendingFile) {
+        const uploadRes = await adminUploadResume(token, pendingFile, resumeData?.url);
+        if (uploadRes.success && uploadRes.data?.url) {
+          finalUrl = uploadRes.data.url;
+        } else {
+          throw new Error(uploadRes.message || 'Failed to upload resume to storage.');
+        }
+      }
+
+      const updated = {
+        ...resumeData,
+        url: finalUrl,
+        fileName: resumeData.fileName || (pendingFile ? pendingFile.name : 'Resume.pdf'),
+        fileSize: resumeData.fileSize || (pendingFile ? `${Math.round(pendingFile.size / 1024)} KB` : '300 KB'),
+      };
+
+      const res = await adminUpdateResumeSettings(token, updated);
       if (res.success) {
-        showToast('Resume settings saved successfully!', 'success');
+        setResumeData(updated);
+        setPendingFile(null);
+        if (pendingPreviewUrl) {
+          URL.revokeObjectURL(pendingPreviewUrl);
+          setPendingPreviewUrl(null);
+        }
+        showToast('Resume and settings saved successfully!', 'success');
         refreshPortfolio();
+      } else {
+        throw new Error(res.message || 'Failed to save settings.');
       }
     } catch (err) {
-      showToast(err.message || 'Failed to update resume settings.', 'error');
+      showToast(err.message || 'Failed to save resume settings.', 'error');
     } finally {
       setSaving(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleOpenFile = () => {
-    if (!resumeData?.url) {
-      showToast('No active resume file found.', 'error');
+    if (pendingPreviewUrl) {
+      window.open(pendingPreviewUrl, '_blank', 'noopener,noreferrer');
       return;
     }
-    window.open(resumeData.url, '_blank', 'noopener,noreferrer');
+    if (resumeData?.url) {
+      window.open(resumeData.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    showToast('No active resume file found.', 'error');
   };
 
   const handleDeleteResume = async (e) => {
     e.stopPropagation();
+
+    // If discarding an un-saved pending file
+    if (pendingFile) {
+      setPendingFile(null);
+      if (pendingPreviewUrl) {
+        URL.revokeObjectURL(pendingPreviewUrl);
+        setPendingPreviewUrl(null);
+      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      showToast('Selected file discarded.', 'info');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this resume? It will be permanently removed from database and storage.')) {
       return;
     }
@@ -165,7 +212,9 @@ export const AdminResume = () => {
     }
   };
 
-  const hasResume = Boolean(resumeData?.url && resumeData?.fileName);
+  const hasFile = Boolean(pendingFile || (resumeData?.url && resumeData?.fileName));
+  const currentFileName = pendingFile ? pendingFile.name : resumeData.fileName;
+  const currentFileSize = pendingFile ? `${Math.round(pendingFile.size / 1024)} KB` : resumeData.fileSize;
 
   return (
     <div>
@@ -184,17 +233,12 @@ export const AdminResume = () => {
           type="button"
           className="admin-btn admin-btn-primary"
           onClick={handleSaveSettings}
-          disabled={saving || loading || uploading || deleting}
+          disabled={saving || loading || deleting}
         >
           {saving ? (
             <>
               <Loader2 size={16} className="admin-spinner" />
               <span>Saving...</span>
-            </>
-          ) : uploading ? (
-            <>
-              <Loader2 size={16} className="admin-spinner" />
-              <span>Uploading...</span>
             </>
           ) : (
             <>
@@ -242,48 +286,54 @@ export const AdminResume = () => {
                 </div>
 
                 <div
-                  className={`admin-badge ${hasResume && resumeData.isDownloadActive ? 'admin-badge-success' : 'admin-badge-danger'}`}
+                  className={`admin-badge ${hasFile && resumeData.isDownloadActive ? 'admin-badge-success' : 'admin-badge-danger'}`}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.75rem' }}
                 >
-                  {hasResume && resumeData.isDownloadActive ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
-                  <span>{hasResume && resumeData.isDownloadActive ? 'Download Active' : 'Download Disabled'}</span>
+                  {hasFile && resumeData.isDownloadActive ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                  <span>{hasFile && resumeData.isDownloadActive ? 'Download Active' : 'Download Disabled'}</span>
                 </div>
               </div>
 
               {/* Active Document Details or Empty State */}
-              {hasResume ? (
+              {hasFile ? (
                 <div className="resume-file-box">
                   {/* Clickable file row: clicking/touching opens file inline in browser */}
                   <div
                     className="resume-file-info-group"
                     onClick={handleOpenFile}
-                    title="Click or tap to open resume in browser"
+                    title="Click or tap to preview resume in browser"
                   >
                     <div className="resume-file-icon">
                       <FileText size={22} />
                     </div>
                     <div className="resume-file-meta">
                       <div className="resume-file-name">
-                        <span>{resumeData.fileName}</span>
+                        <span>{currentFileName}</span>
                         <ExternalLink size={13} style={{ opacity: 0.65, flexShrink: 0 }} />
                       </div>
                       <div className="resume-file-subtext">
                         <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-                          Size: {resumeData.fileSize || 'PDF'}
+                          Size: {currentFileSize || 'PDF'}
                         </span>
                         <span>•</span>
-                        <span style={{ color: 'var(--accent-cyan)' }}>Tap to view file</span>
+                        {pendingFile ? (
+                          <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>
+                            Ready to save (Click Save Settings)
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--accent-cyan)' }}>Tap to view file</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Clean X button to permanently remove resume */}
+                  {/* Clean X button */}
                   <button
                     type="button"
                     onClick={handleDeleteResume}
-                    disabled={deleting}
+                    disabled={saving || deleting}
                     className="resume-delete-btn"
-                    title="Delete resume from database and storage"
+                    title={pendingFile ? 'Discard selected file' : 'Delete resume from database and storage'}
                   >
                     {deleting ? (
                       <Loader2 size={16} className="spin-animation" />
@@ -319,47 +369,42 @@ export const AdminResume = () => {
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                   accept="application/pdf"
                   style={{ display: 'none' }}
                 />
 
                 <div
                   className="resume-upload-dropzone"
-                  onClick={() => !uploading && fileInputRef.current?.click()}
-                  style={{ cursor: uploading ? 'wait' : 'pointer' }}
+                  onClick={() => !saving && fileInputRef.current?.click()}
+                  style={{ cursor: saving ? 'wait' : 'pointer' }}
                 >
-                  {uploading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', color: 'var(--accent-cyan)' }}>
-                      <Loader2 size={26} className="spin-animation" />
-                      <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>Uploading...</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem' }}>
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        background: pendingFile ? 'rgba(16, 185, 129, 0.12)' : 'rgba(56, 189, 248, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: pendingFile ? 'var(--accent-emerald)' : 'var(--accent-cyan)',
+                      }}
+                    >
+                      <UploadCloud size={24} />
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem' }}>
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          background: 'rgba(56, 189, 248, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--accent-cyan)',
-                        }}
-                      >
-                        <UploadCloud size={24} />
+                    <div>
+                      <div style={{ fontSize: '0.96rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {pendingFile ? 'File Selected (Click Save Settings)' : 'Click or Tap to Select New PDF Resume'}
                       </div>
-                      <div>
-                        <div style={{ fontSize: '0.96rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          Click or Tap to Upload New PDF Resume
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                          Accepts .pdf files up to 15MB. Replaces active file instantly upon upload.
-                        </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        {pendingFile
+                          ? `Ready: ${pendingFile.name} — Click Save Settings above to upload`
+                          : 'Accepts .pdf files up to 15MB. Click Save Settings to apply.'}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
