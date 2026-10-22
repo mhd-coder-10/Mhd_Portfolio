@@ -16,13 +16,20 @@ cloudinary.config({
  */
 const uploadToCloudinary = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
-    const rootFolder = env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO';
-    const targetFolder = options.folder ? `${rootFolder}/${options.folder}` : rootFolder;
+    const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
+    
+    // Resolve final folder: ensure it is always inside rootFolder (e.g. MHD_PORTFOLIO/images)
+    let finalFolder = rootFolder;
+    if (options.folder) {
+      finalFolder = options.folder.startsWith(rootFolder)
+        ? options.folder
+        : `${rootFolder}/${options.folder.replace(/^\/+/, '')}`;
+    }
 
     const uploadOptions = {
-      folder: targetFolder,
       resource_type: options.resource_type || 'auto',
       ...options,
+      folder: finalFolder, // Crucial: folder must be after ...options so options.folder never overrides it!
     };
 
     const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
