@@ -59,19 +59,19 @@ const settingsSchema = new mongoose.Schema(
     resume: {
       url: {
         type: String,
-        default: '/assets/resume/Momin-Mahmmadbhai-Resume.pdf',
+        default: '',
       },
       fileName: {
         type: String,
-        default: 'Momin-Mahmmadbhai-Resume.pdf',
+        default: '',
       },
       fileSize: {
         type: String,
-        default: '339 KB',
+        default: '',
       },
       isDownloadActive: {
         type: Boolean,
-        default: true,
+        default: false,
       },
     },
     // Navigation Links

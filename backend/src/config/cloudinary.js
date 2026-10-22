@@ -10,26 +10,27 @@ cloudinary.config({
 
 /**
  * Upload a memory buffer to Cloudinary
+ * All files are strictly stored in the single root folder (MHD_PORTFOLIO) - no subfolders.
  * @param {Buffer} buffer - File buffer from multer memoryStorage
- * @param {Object} options - { folder, resource_type, format, public_id }
+ * @param {Object} options - { resource_type, format, public_id, overwrite, invalidate }
  * @returns {Promise<Object>}
  */
 const uploadToCloudinary = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
+    // Strictly store directly in root folder MHD_PORTFOLIO (no subfolders)
     const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
 
-    // Resolve final folder: ensure it is always inside rootFolder (e.g. MHD_PORTFOLIO/images)
-    let finalFolder = rootFolder;
-    if (options.folder) {
-      finalFolder = options.folder.startsWith(rootFolder)
-        ? options.folder
-        : `${rootFolder}/${options.folder.replace(/^\/+/, '')}`;
+    // Sanitize public_id if passed
+    let publicId = options.public_id;
+    if (publicId && publicId.startsWith(`${rootFolder}/`)) {
+      publicId = publicId.substring(rootFolder.length + 1);
     }
 
     const uploadOptions = {
       resource_type: options.resource_type || 'auto',
       ...options,
-      folder: finalFolder, // Crucial: folder must be after ...options so options.folder never overrides it!
+      folder: rootFolder, // Strictly root folder (MHD_PORTFOLIO) - no subfolders
+      ...(publicId ? { public_id: publicId } : {}),
     };
 
     const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
@@ -54,7 +55,7 @@ const deleteFromCloudinary = async (urlOrPublicId) => {
   }
 
   // If local /uploads/ or /assets/, ignore
-  if (!urlOrPublicId.includes('cloudinary.com') && (urlOrPublicId.startsWith('/') || !urlOrPublicId.includes('/'))) {
+  if (urlOrPublicId.startsWith('/assets/') || urlOrPublicId.startsWith('/uploads/')) {
     return false;
   }
 
@@ -64,7 +65,7 @@ const deleteFromCloudinary = async (urlOrPublicId) => {
     let resourceType = 'image';
 
     if (urlOrPublicId.includes('cloudinary.com')) {
-      // Find our root folder in URL (e.g. MHD_PORTFOLIO/images/abc.jpg)
+      // Find our root folder in URL (e.g. MHD_PORTFOLIO/resume.pdf)
       const folderIndex = urlOrPublicId.indexOf(rootFolder);
       if (folderIndex !== -1) {
         const afterFolder = urlOrPublicId.substring(folderIndex).split('?')[0];
@@ -89,6 +90,11 @@ const deleteFromCloudinary = async (urlOrPublicId) => {
         resourceType = 'video';
       } else {
         resourceType = 'image';
+      }
+    } else {
+      // Direct public_id like 'resume' or 'MHD_PORTFOLIO/resume'
+      if (!publicId.startsWith(`${rootFolder}/`)) {
+        publicId = `${rootFolder}/${publicId}`;
       }
     }
 

@@ -40,8 +40,8 @@ export const socialLinks = {
   telegramUsername: '@Mohammad_041',
   telegramBot: 'https://telegram.me/Mohammad_041_bot',
 
-  // Downloadable Resume path
-  resume: '/assets/resume/Momin-Mahmmadbhai-Resume.pdf',
+  // Downloadable Resume path (populated dynamically from Cloudinary)
+  resume: '',
 };
 
 export default socialLinks;

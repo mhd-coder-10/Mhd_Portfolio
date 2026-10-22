@@ -91,39 +91,29 @@ const downloadResume = async (req, res, next) => {
   try {
     const settings = await Settings.findOne();
     const resumeUrl = settings?.resume?.url;
+    const isDownloadActive = settings?.resume?.isDownloadActive !== false;
     const fileName = settings?.resume?.fileName || 'Momin-Mahmmadbhai-Resume.pdf';
+
+    if (!resumeUrl || !isDownloadActive) {
+      return res.status(404).json({ success: false, message: 'Resume file is not available yet.' });
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
 
-    const serveLocalFallback = () => {
-      const fallbackPath = path.resolve(__dirname, '../../../frontend/public/assets/resume/Momin-Mahmmadbhai-Resume.pdf');
-      if (fs.existsSync(fallbackPath)) {
-        return fs.createReadStream(fallbackPath).pipe(res);
-      }
-      return res.status(404).json({ success: false, message: 'Resume file not found' });
-    };
-
-    if (resumeUrl && resumeUrl.startsWith('http')) {
+    if (resumeUrl.startsWith('http')) {
       const client = resumeUrl.startsWith('https') ? https : http;
       client.get(resumeUrl, (streamRes) => {
         if (streamRes.statusCode === 200) {
           streamRes.pipe(res);
         } else {
-          serveLocalFallback();
+          return res.status(404).json({ success: false, message: 'Resume file is not available yet.' });
         }
       }).on('error', () => {
-        serveLocalFallback();
+        return res.status(404).json({ success: false, message: 'Resume file is not available yet.' });
       });
-    } else if (resumeUrl && resumeUrl.startsWith('/')) {
-      const localPath = path.resolve(__dirname, '../../..', resumeUrl.replace(/^\/+/, ''));
-      if (fs.existsSync(localPath)) {
-        fs.createReadStream(localPath).pipe(res);
-      } else {
-        serveLocalFallback();
-      }
     } else {
-      serveLocalFallback();
+      return res.status(404).json({ success: false, message: 'Resume file is not available yet.' });
     }
   } catch (error) {
     next(error);

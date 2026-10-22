@@ -1,11 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const Settings = require('../models/settings.model');
 const env = require('../config/env');
 const { cloudinary, uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Handle Image / Document Upload to Cloudinary
+ * All files are saved strictly in root folder MHD_PORTFOLIO (no subfolders)
  * POST /api/v1/upload/image
  */
 const uploadImageFile = async (req, res, next) => {
@@ -25,12 +24,13 @@ const uploadImageFile = async (req, res, next) => {
     }
 
     const isPdf = req.file.mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf');
-    const folder = isPdf ? 'documents' : 'images';
-    const resourceType = isPdf ? 'raw' : 'image';
+    const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
 
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder,
-      resource_type: resourceType,
+      folder: rootFolder,
+      resource_type: isPdf ? 'image' : 'auto',
+      ...(isPdf ? { format: 'pdf' } : {}),
+      invalidate: true,
     });
 
     return res.status(200).json({
@@ -52,6 +52,7 @@ const uploadImageFile = async (req, res, next) => {
 
 /**
  * Handle Resume Upload to Cloudinary
+ * All files are saved strictly in root folder MHD_PORTFOLIO (no subfolders, no local disk writes)
  * POST /api/v1/upload/resume
  */
 const uploadResumeFile = async (req, res, next) => {
@@ -69,6 +70,8 @@ const uploadResumeFile = async (req, res, next) => {
       settings = new Settings();
     }
 
+    const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
+
     // Delete existing resume from request or settings
     const previousUrl = req.body.previousUrl || req.body.oldUrl;
     if (previousUrl) {
@@ -80,38 +83,27 @@ const uploadResumeFile = async (req, res, next) => {
       await deleteFromCloudinary(settings.resume.url);
     }
 
-    // Clean all previous files in Cloudinary folder MHD_PORTFOLIO/resumes to guarantee clean 1-file replacement
+    // Destroy existing MHD_PORTFOLIO/resume in Cloudinary to guarantee clean overwrite
     try {
-      const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
-      const resumeFolder = `${rootFolder}/resumes`;
-      console.log(`[Upload Resume] Auto-purging previous files in folder: ${resumeFolder}`);
-      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'raw' });
-      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'image' });
+      await cloudinary.uploader.destroy(`${rootFolder}/resume`, { resource_type: 'image', invalidate: true });
+      await cloudinary.uploader.destroy(`${rootFolder}/resume`, { resource_type: 'raw', invalidate: true });
     } catch (cleanErr) {
-      console.warn('[Upload Resume] Previous resume prefix cleanup notice:', cleanErr.message);
+      console.warn('[Upload Resume] Previous resume cleanup notice:', cleanErr.message);
     }
 
+    // Upload directly to root folder MHD_PORTFOLIO with public_id 'resume'
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder: 'resumes',
+      folder: rootFolder,
       resource_type: 'image',
       format: 'pdf',
       public_id: 'resume',
       overwrite: true,
+      invalidate: true,
     });
 
     const sizeInKb = `${Math.round(req.file.size / 1024)} KB`;
 
-    // Sync local asset file so public downloads never fail
-    try {
-      const publicResumeDir = path.resolve(__dirname, '../../../frontend/public/assets/resume');
-      if (fs.existsSync(publicResumeDir)) {
-        fs.writeFileSync(path.join(publicResumeDir, 'Momin-Mahmmadbhai-Resume.pdf'), req.file.buffer);
-      }
-    } catch (e) {
-      console.warn('[Resume Upload] Local sync notice:', e.message);
-    }
-
-    // Automatically update Settings.resume with new Cloudinary URL
+    // Automatically update Settings.resume with new Cloudinary URL (ONLY in Cloudinary, no local disk saves)
     settings.resume = {
       url: result.secure_url,
       fileName: req.file.originalname,
@@ -169,13 +161,13 @@ const deleteResumeFile = async (req, res, next) => {
       settings = new Settings();
     }
 
-    // 1. Purge all files in Cloudinary resumes folder
+    const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
+
+    // 1. Delete resume from Cloudinary root folder
     try {
-      const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
-      const resumeFolder = `${rootFolder}/resumes`;
-      console.log(`[Delete Resume] Purging Cloudinary resumes in ${resumeFolder}`);
-      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'raw' });
-      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'image' });
+      console.log(`[Delete Resume] Deleting ${rootFolder}/resume from Cloudinary`);
+      await cloudinary.uploader.destroy(`${rootFolder}/resume`, { resource_type: 'image', invalidate: true });
+      await cloudinary.uploader.destroy(`${rootFolder}/resume`, { resource_type: 'raw', invalidate: true });
       const targetUrl = req.body?.url || settings.resume?.url;
       if (targetUrl) {
         await deleteFromCloudinary(targetUrl);
@@ -184,17 +176,7 @@ const deleteResumeFile = async (req, res, next) => {
       console.warn('[Delete Resume] Cloudinary cleanup notice:', cErr.message);
     }
 
-    // 2. Remove local synced PDF if exists
-    try {
-      const localPdf = path.resolve(__dirname, '../../../frontend/public/assets/resume/Momin-Mahmmadbhai-Resume.pdf');
-      if (fs.existsSync(localPdf)) {
-        fs.unlinkSync(localPdf);
-      }
-    } catch (fErr) {
-      console.warn('[Delete Resume] Local unlink notice:', fErr.message);
-    }
-
-    // 3. Clear resume fields in Settings model
+    // 2. Clear resume fields in Settings model
     settings.resume = {
       url: '',
       fileName: '',
