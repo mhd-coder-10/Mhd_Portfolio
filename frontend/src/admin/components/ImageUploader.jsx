@@ -84,6 +84,7 @@ export const ImageUploader = ({
   const { token } = useAdminAuth();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -143,15 +144,19 @@ export const ImageUploader = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    if (value && value.includes('cloudinary.com')) {
-      try {
+    setRemoving(true);
+    try {
+      if (value && value.includes('cloudinary.com')) {
         await adminDeleteUploadedFile(token, value);
-        showToast('File deleted from Cloudinary.', 'info');
-      } catch (err) {
-        console.warn('Failed to delete file from Cloudinary:', err);
+        showToast('File removed successfully.', 'info');
       }
+      onChange('');
+    } catch (err) {
+      console.warn('Failed to delete file from Cloudinary:', err);
+      onChange('');
+    } finally {
+      setRemoving(false);
     }
-    onChange('');
   };
 
   const handleApplyUrl = (e) => {
@@ -314,13 +319,17 @@ export const ImageUploader = ({
             {/* Remove File Button */}
             <button
               type="button"
-              disabled={uploading}
+              disabled={uploading || removing}
               className="admin-btn admin-btn-danger admin-btn-sm"
               onClick={handleRemove}
-              title="Delete File from Cloudinary"
+              title="Remove File"
             >
-              <X size={14} />
-              <span>Remove</span>
+              {removing ? (
+                <Loader2 size={14} className="spin-animation" />
+              ) : (
+                <X size={14} />
+              )}
+              <span>{removing ? 'Removing...' : 'Remove'}</span>
             </button>
           </div>
         </div>

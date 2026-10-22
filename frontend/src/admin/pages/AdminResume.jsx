@@ -122,7 +122,7 @@ export const AdminResume = () => {
 
   const handleOpenFile = () => {
     if (!resumeData?.url) {
-      showToast('Resume file abhi exist nahi karta.', 'error');
+      showToast('No active resume file found.', 'error');
       return;
     }
     window.open(resumeData.url, '_blank', 'noopener,noreferrer');
@@ -130,7 +130,7 @@ export const AdminResume = () => {
 
   const handleDeleteResume = async (e) => {
     e.stopPropagation();
-    if (!window.confirm('Kya aap sach me resume delete karna chahte ho? Ye database aur storage dono se permanently remove ho jayega.')) {
+    if (!window.confirm('Are you sure you want to delete this resume? It will be permanently removed from database and storage.')) {
       return;
     }
 
@@ -157,9 +157,9 @@ export const AdminResume = () => {
       setResumeData(cleared);
       await adminUpdateResumeSettings(token, cleared);
       refreshPortfolio();
-      showToast('Resume file successfully remove ho gayi.', 'success');
+      showToast('Resume file deleted successfully.', 'success');
     } catch (err) {
-      showToast(err.message || 'Resume delete karne me problem aayi.', 'error');
+      showToast(err.message || 'Failed to delete resume file.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -283,7 +283,7 @@ export const AdminResume = () => {
                     onClick={handleDeleteResume}
                     disabled={deleting}
                     className="resume-delete-btn"
-                    title="Resume delete karein (database aur storage dono se)"
+                    title="Delete resume from database and storage"
                   >
                     {deleting ? (
                       <Loader2 size={16} className="spin-animation" />
@@ -306,10 +306,10 @@ export const AdminResume = () => {
                   }}
                 >
                   <p style={{ margin: 0, fontWeight: 500, color: 'var(--text-secondary)' }}>
-                    Abhi koi resume file exist nahi karti.
+                    No active resume uploaded yet.
                   </p>
                   <span style={{ fontSize: '0.78rem', marginTop: '0.25rem', display: 'block' }}>
-                    Niche diye gaye box me PDF drop karke new resume upload karein.
+                    Upload a PDF resume below to activate public downloads.
                   </span>
                 </div>
               )}

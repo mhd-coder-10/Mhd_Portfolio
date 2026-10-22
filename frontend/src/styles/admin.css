@@ -980,6 +980,38 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes adminSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation,
+.admin-spinner,
+.animate-spin,
+svg.spin-animation,
+svg.admin-spinner {
+  animation: adminSpin 0.75s linear infinite !important;
+  transform-origin: center center !important;
+  transform-box: fill-box !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  will-change: transform !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-animation,
+  .admin-spinner,
+  .animate-spin,
+  svg.spin-animation,
+  svg.admin-spinner {
+    animation: adminSpin 0.75s linear infinite !important;
+  }
+}
+
 /* Responsive Grid Utilities for Admin Pages */
 .admin-responsive-grid-split {
   display: grid;

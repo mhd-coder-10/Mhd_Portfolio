@@ -268,6 +268,29 @@
   animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Global Continuous Spinner Animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation,
+.admin-spinner,
+.animate-spin,
+svg.spin-animation,
+svg.admin-spinner {
+  animation: spin 0.75s linear infinite !important;
+  transform-origin: center center !important;
+  transform-box: fill-box !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  will-change: transform !important;
+}
+
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,

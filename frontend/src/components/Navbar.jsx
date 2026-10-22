@@ -43,7 +43,7 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
   const handleResumeDownload = async (e) => {
     e.preventDefault();
     if (!socialLinks?.resume || socialLinks?.resumeActive === false) {
-      showToast('Resume file abhi exist nahi karta.', 'error');
+      showToast('Resume file is not available yet.', 'error');
       return;
     }
 
@@ -61,7 +61,7 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch {
-      showToast('Resume file abhi exist nahi karta.', 'error');
+      showToast('Resume file is not available yet.', 'error');
     }
   };
 
@@ -256,7 +256,7 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
             onClick={handleResumeDownload}
             className="btn btn-outline"
             style={{ padding: '0.5rem 0.95rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-            title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
+            title={socialLinks.resumeActive ? "Download Resume" : "Resume not available"}
           >
             <Download size={14} />
             <span>Resume</span>
@@ -379,7 +379,7 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
                   handleResumeDownload(e);
                 }}
                 className="btn btn-outline"
-                title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
+                title={socialLinks.resumeActive ? "Download Resume" : "Resume not available"}
                 style={{
                   padding: '0.38rem 0.5rem',
                   fontSize: '0.75rem',

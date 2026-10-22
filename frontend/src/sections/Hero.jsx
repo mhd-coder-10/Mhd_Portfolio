@@ -37,7 +37,7 @@ export const Hero = () => {
   const handleResumeDownload = async (e) => {
     e.preventDefault();
     if (!socialLinks?.resume || socialLinks?.resumeActive === false) {
-      showToast('Resume file abhi exist nahi karta.', 'error');
+      showToast('Resume file is not available yet.', 'error');
       return;
     }
 
@@ -55,7 +55,7 @@ export const Hero = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch {
-      showToast('Resume file abhi exist nahi karta.', 'error');
+      showToast('Resume file is not available yet.', 'error');
     }
   };
 
@@ -304,7 +304,7 @@ export const Hero = () => {
                 href={socialLinks.resume || '#'}
                 onClick={handleResumeDownload}
                 className="btn btn-secondary"
-                title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
+                title={socialLinks.resumeActive ? "Download Resume" : "Resume not available"}
               >
                 <Download size={17} />
                 <span>{personalInfo.hero?.secondaryCtaText || 'Download Resume'}</span>
