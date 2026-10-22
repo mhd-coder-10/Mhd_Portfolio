@@ -93,7 +93,10 @@ const uploadResumeFile = async (req, res, next) => {
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'resumes',
-      resource_type: 'raw',
+      resource_type: 'image',
+      format: 'pdf',
+      public_id: 'resume',
+      overwrite: true,
     });
 
     const sizeInKb = `${Math.round(req.file.size / 1024)} KB`;
