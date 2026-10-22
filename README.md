@@ -50,7 +50,7 @@ npm run install:all
 ```
 
 ### 2. Environment Variables
-- Create `.env` inside `backend/` using `backend/.env.example` as a template (MongoDB URI, JWT secret, Admin email & password, Port).
+- Configure `.env` inside `backend/` (MongoDB URI, JWT secret, Admin credentials, Cloudinary, Port).
 - `frontend/.env` is already pre-configured for development.
 
 ### 3. Start Application
