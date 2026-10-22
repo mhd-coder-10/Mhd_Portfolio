@@ -251,12 +251,12 @@ export const AdminProfile = () => {
             {saving ? (
               <>
                 <Loader2 size={16} className="spin-animation" />
-                <span>Saving Profile...</span>
+                <span>Saving...</span>
               </>
             ) : imageUploading ? (
               <>
                 <Loader2 size={16} className="spin-animation" />
-                <span>Uploading Photo to Cloudinary...</span>
+                <span>Uploading...</span>
               </>
             ) : (
               <>

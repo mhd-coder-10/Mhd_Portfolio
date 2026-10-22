@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const Settings = require('../models/settings.model');
-const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const env = require('../config/env');
+const { cloudinary, uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Handle Image / Document Upload to Cloudinary
@@ -68,7 +69,7 @@ const uploadResumeFile = async (req, res, next) => {
       settings = new Settings();
     }
 
-    // Delete existing resume: check req.body.previousUrl and settings.resume?.url
+    // Delete existing resume from request or settings
     const previousUrl = req.body.previousUrl || req.body.oldUrl;
     if (previousUrl) {
       console.log(`[Upload Resume] Deleting previous resume from request: ${previousUrl}`);
@@ -77,6 +78,17 @@ const uploadResumeFile = async (req, res, next) => {
     if (settings.resume?.url && settings.resume.url !== previousUrl) {
       console.log(`[Upload Resume] Deleting previous resume from settings: ${settings.resume.url}`);
       await deleteFromCloudinary(settings.resume.url);
+    }
+
+    // Clean all previous files in Cloudinary folder MHD_PORTFOLIO/resumes to guarantee clean 1-file replacement
+    try {
+      const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
+      const resumeFolder = `${rootFolder}/resumes`;
+      console.log(`[Upload Resume] Auto-purging previous files in folder: ${resumeFolder}`);
+      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'raw' });
+      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'image' });
+    } catch (cleanErr) {
+      console.warn('[Upload Resume] Previous resume prefix cleanup notice:', cleanErr.message);
     }
 
     const result = await uploadToCloudinary(req.file.buffer, {

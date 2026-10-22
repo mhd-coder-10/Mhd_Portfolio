@@ -3,14 +3,14 @@ import {
   FileDown,
   UploadCloud,
   FileText,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   ExternalLink,
   Save,
   Loader2,
-  AlertCircle,
+  ShieldCheck,
   Eye,
-  Trash2,
+  Sparkles,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import {
@@ -50,7 +50,7 @@ export const AdminResume = () => {
           isDownloadActive: res.data.resume.isDownloadActive !== undefined ? res.data.resume.isDownloadActive : true,
         });
       }
-    } catch (err) {
+    } catch {
       showToast('Failed to load resume settings.', 'error');
     } finally {
       setLoading(false);
@@ -67,11 +67,13 @@ export const AdminResume = () => {
 
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       showToast('Only PDF documents are allowed for resume upload.', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('Resume PDF cannot exceed 10MB.', 'error');
+    if (file.size > 15 * 1024 * 1024) {
+      showToast('Resume PDF cannot exceed 15MB.', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -89,7 +91,7 @@ export const AdminResume = () => {
 
         // Auto-save resume settings with new URL
         await adminUpdateResumeSettings(token, updated);
-        showToast('New resume PDF uploaded and activated successfully!', 'success');
+        showToast('Resume updated and activated successfully!', 'success');
         refreshPortfolio();
       }
     } catch (err) {
@@ -126,7 +128,7 @@ export const AdminResume = () => {
           </div>
           <div>
             <h1>Resume / CV Management</h1>
-            <p>Upload a new PDF resume, toggle public downloads, or customize file labels</p>
+            <p>Upload your PDF resume, customize labels, and toggle public downloads</p>
           </div>
         </div>
         <button
@@ -143,7 +145,7 @@ export const AdminResume = () => {
           ) : uploading ? (
             <>
               <Loader2 size={16} className="admin-spinner" />
-              <span>Uploading PDF...</span>
+              <span>Uploading...</span>
             </>
           ) : (
             <>
@@ -162,7 +164,7 @@ export const AdminResume = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Active Resume Card */}
             <div className="admin-card" style={{ borderLeft: '4px solid var(--accent-cyan)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1rem', flexWrap: 'wrap', gap: '0.6rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   <div
                     style={{
@@ -175,6 +177,7 @@ export const AdminResume = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'var(--accent-cyan)',
+                      flexShrink: 0,
                     }}
                   >
                     <FileText size={22} />
@@ -184,53 +187,100 @@ export const AdminResume = () => {
                       Current Active Resume
                     </h3>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      Served to recruiters and clients on public portfolio
+                      Active for recruiters and visitors on live portfolio
                     </span>
                   </div>
                 </div>
 
                 <div
                   className={`admin-badge ${resumeData.isDownloadActive ? 'admin-badge-success' : 'admin-badge-danger'}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.75rem' }}
                 >
-                  {resumeData.isDownloadActive ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                  {resumeData.isDownloadActive ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
                   <span>{resumeData.isDownloadActive ? 'Download Active' : 'Download Disabled'}</span>
                 </div>
               </div>
 
+              {/* Active Document Details (Clean, no raw URLs) */}
               <div
                 style={{
                   background: 'var(--bg-secondary)',
-                  padding: '1rem 1.25rem',
+                  padding: '1.15rem 1.25rem',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)',
                   marginBottom: '1.25rem',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                      {resumeData.fileName}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        border: '1px solid rgba(239, 68, 68, 0.28)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#ef4444',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileText size={24} />
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                      File Size: {resumeData.fileSize} • URL: <code style={{ color: 'var(--accent-cyan)' }}>{resumeData.url}</code>
+                    <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          fontSize: '0.98rem',
+                          textOverflow: 'ellipsis',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {resumeData.fileName}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.78rem',
+                          color: 'var(--text-muted)',
+                          marginTop: '0.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          Size: {resumeData.fileSize}
+                        </span>
+                        <span>•</span>
+                        <span style={{ color: 'var(--accent-emerald)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <ShieldCheck size={13} />
+                          <span>Cloudinary Synced</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: 'auto' }}>
                     <a
                       href={resumeData.url}
                       target="_blank"
                       rel="noreferrer"
                       className="admin-btn admin-btn-secondary admin-btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
                       <Eye size={13} />
-                      <span>Preview PDF</span>
+                      <span>Preview</span>
                     </a>
                     <a
                       href={resumeData.url}
                       download={resumeData.fileName}
                       className="admin-btn admin-btn-primary admin-btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
                       <FileDown size={13} />
                       <span>Download Test</span>
@@ -239,7 +289,7 @@ export const AdminResume = () => {
                 </div>
               </div>
 
-              {/* Upload New File Area */}
+              {/* Upload New File Dropzone */}
               <div>
                 <input
                   type="file"
@@ -254,28 +304,36 @@ export const AdminResume = () => {
                   style={{
                     border: '2px dashed var(--border-hover)',
                     borderRadius: 'var(--radius-lg)',
-                    padding: '2rem 1.5rem',
+                    padding: '2.25rem 1.5rem',
                     textAlign: 'center',
-                    backgroundColor: 'var(--bg-surface)',
-                    cursor: uploading ? 'not-allowed' : 'pointer',
-                    transition: 'border-color 0.2s, background-color 0.2s',
+                    backgroundColor: 'rgba(255, 255, 255, 0.015)',
+                    cursor: uploading ? 'wait' : 'pointer',
+                    transition: 'all var(--transition-fast)',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-cyan)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
+                  onMouseEnter={(e) => {
+                    if (!uploading) {
+                      e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                      e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.04)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!uploading) {
+                      e.currentTarget.style.borderColor = 'var(--border-hover)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.015)';
+                    }
+                  }}
                 >
                   {uploading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                      <Loader2 size={32} className="admin-spinner" style={{ color: 'var(--accent-cyan)' }} />
-                      <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-                        Uploading & processing PDF resume...
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', color: 'var(--accent-cyan)' }}>
+                      <Loader2 size={26} className="spin-animation" />
+                      <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>Uploading...</span>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem' }}>
                       <div
                         style={{
-                          width: '48px',
-                          height: '48px',
+                          width: '50px',
+                          height: '50px',
                           borderRadius: '50%',
                           background: 'rgba(56, 189, 248, 0.1)',
                           display: 'flex',
@@ -284,14 +342,14 @@ export const AdminResume = () => {
                           color: 'var(--accent-cyan)',
                         }}
                       >
-                        <UploadCloud size={24} />
+                        <UploadCloud size={26} />
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          Click to upload new PDF resume
+                        <div style={{ fontSize: '0.98rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          Click or Tap to Upload New PDF Resume
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                          Accepts .pdf format up to 10MB. Replaces active file instantly upon upload.
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                          Accepts PDF up to 15MB. Automatically replaces previous file in Cloudinary.
                         </div>
                       </div>
                     </div>
@@ -307,14 +365,15 @@ export const AdminResume = () => {
               Download Settings & Metadata
             </h3>
 
+            {/* Toggle Status */}
             <div className="admin-form-group">
               <label className="admin-label">Public Download Button Status</label>
               <label
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.65rem',
-                  padding: '0.75rem 1rem',
+                  gap: '0.75rem',
+                  padding: '0.85rem 1rem',
                   background: 'var(--bg-secondary)',
                   borderRadius: 'var(--radius-md)',
                   cursor: 'pointer',
@@ -323,34 +382,22 @@ export const AdminResume = () => {
               >
                 <input
                   type="checkbox"
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent-cyan)' }}
                   checked={resumeData.isDownloadActive}
                   onChange={(e) => setResumeData({ ...resumeData, isDownloadActive: e.target.checked })}
                 />
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                     Enable "Download CV / Resume" Button
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                     If unchecked, the download button in Hero and Contact sections will be hidden.
                   </div>
                 </div>
               </label>
             </div>
 
-            <div className="admin-form-group">
-              <label className="admin-label">Direct File URL</label>
-              <input
-                type="text"
-                className="admin-input"
-                value={resumeData.url}
-                onChange={(e) => setResumeData({ ...resumeData, url: e.target.value })}
-                placeholder="/assets/resume/..."
-              />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
-                Relative path or uploaded URL from server.
-              </span>
-            </div>
-
+            {/* Display Name */}
             <div className="admin-form-group">
               <label className="admin-label">File Display Name</label>
               <input
@@ -360,8 +407,12 @@ export const AdminResume = () => {
                 onChange={(e) => setResumeData({ ...resumeData, fileName: e.target.value })}
                 placeholder="Momin-Mahmmadbhai-Resume.pdf"
               />
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                The filename displayed to users when downloading.
+              </span>
             </div>
 
+            {/* File Size */}
             <div className="admin-form-group">
               <label className="admin-label">File Size Label</label>
               <input
@@ -369,26 +420,32 @@ export const AdminResume = () => {
                 className="admin-input"
                 value={resumeData.fileSize}
                 onChange={(e) => setResumeData({ ...resumeData, fileSize: e.target.value })}
-                placeholder="339 KB"
+                placeholder="1.4 MB"
               />
             </div>
 
+            {/* Cloudinary Automated Replacement Info Box */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '0.6rem',
+                gap: '0.75rem',
                 background: 'rgba(56, 189, 248, 0.05)',
-                border: '1px solid rgba(56, 189, 248, 0.15)',
-                padding: '0.85rem',
+                border: '1px solid rgba(56, 189, 248, 0.2)',
+                padding: '0.95rem 1.1rem',
                 borderRadius: 'var(--radius-md)',
-                marginTop: '1.25rem',
+                marginTop: '1.5rem',
               }}
             >
-              <AlertCircle size={16} style={{ color: 'var(--accent-cyan)', flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-                When you upload a new PDF via the dropzone, it is securely uploaded to Cloudinary (replacing previous versions) and your live portfolio updates immediately.
-              </p>
+              <Sparkles size={18} style={{ color: 'var(--accent-cyan)', flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '0.2rem' }}>
+                  Automatic Cloudinary Replacement
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                  Whenever you upload a new PDF resume, previous files are automatically deleted from Cloudinary storage, keeping only your single latest resume file.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -522,7 +522,7 @@ export const AdminCertifications = () => {
                   ) : imageUploading ? (
                     <>
                       <Loader2 size={16} className="admin-spinner" />
-                      <span>Uploading to Cloudinary...</span>
+                      <span>Uploading...</span>
                     </>
                   ) : (
                     <>

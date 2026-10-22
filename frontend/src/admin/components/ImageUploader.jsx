@@ -346,7 +346,7 @@ export const ImageUploader = ({
           {uploading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', color: 'var(--accent-cyan)' }}>
               <Loader2 size={24} className="spin-animation" />
-              <span style={{ fontSize: '0.88rem', fontWeight: 500 }}>{uploadStatus || 'Uploading file to Cloudinary...'}</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Uploading...</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
