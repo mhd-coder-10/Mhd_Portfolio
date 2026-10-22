@@ -19,6 +19,7 @@ import {
 import { ThemeToggle } from './ThemeToggle';
 import { checkApiHealth } from '../services/api';
 import { usePortfolioData } from '../context/PortfolioContext';
+import { useToast } from '../admin/components/AdminToast';
 
 const getNavIcon = (href, label) => {
   const key = `${href || ''} ${label || ''}`.toLowerCase();
@@ -34,9 +35,35 @@ const getNavIcon = (href, label) => {
 
 export const Navbar = ({ theme, toggleTheme, activeSection }) => {
   const { navigationLinks, socialLinks, personalInfo } = usePortfolioData();
+  const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dbConnected, setDbConnected] = useState(false);
+
+  const handleResumeDownload = async (e) => {
+    e.preventDefault();
+    if (!socialLinks?.resume || socialLinks?.resumeActive === false) {
+      showToast('Resume file abhi exist nahi karta.', 'error');
+      return;
+    }
+
+    try {
+      const filename = socialLinks.resumeName || 'Momin-Mahmmadbhai-Resume.pdf';
+      const response = await fetch(socialLinks.resume);
+      if (!response.ok) throw new Error('File not found');
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      showToast('Resume file abhi exist nahi karta.', 'error');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -225,10 +252,11 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
           <a
-            href={socialLinks.resume}
-            download="Momin-Mahmmadbhai-Resume.pdf"
+            href={socialLinks.resume || '#'}
+            onClick={handleResumeDownload}
             className="btn btn-outline"
             style={{ padding: '0.5rem 0.95rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+            title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
           >
             <Download size={14} />
             <span>Resume</span>
@@ -345,10 +373,13 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
               }}
             >
               <a
-                href={socialLinks.resume}
-                download="Momin-Mahmmadbhai-Resume.pdf"
+                href={socialLinks.resume || '#'}
+                onClick={(e) => {
+                  handleNavClick();
+                  handleResumeDownload(e);
+                }}
                 className="btn btn-outline"
-                onClick={handleNavClick}
+                title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
                 style={{
                   padding: '0.38rem 0.5rem',
                   fontSize: '0.75rem',

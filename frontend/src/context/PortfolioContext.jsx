@@ -115,11 +115,12 @@ export const PortfolioProvider = ({ children }) => {
             });
           }
 
-          // Resume dynamic path: serve synced resume file so public download works instantly without 401 errors
-          updatedSocialLinks.resume = '/assets/resume/Momin-Mahmmadbhai-Resume.pdf';
-          if (d.settings?.resume?.isDownloadActive !== undefined) {
-            updatedSocialLinks.resumeActive = d.settings.resume.isDownloadActive;
-          }
+          // Resume dynamic path: link to active resume or empty if deleted/inactive
+          const resumeUrl = d.settings?.resume?.url || '';
+          const isResumeActive = d.settings?.resume?.isDownloadActive !== false;
+          updatedSocialLinks.resume = resumeUrl;
+          updatedSocialLinks.resumeActive = Boolean(resumeUrl && isResumeActive);
+          updatedSocialLinks.resumeName = d.settings?.resume?.fileName || 'Momin-Mahmmadbhai-Resume.pdf';
 
           setSocialLinks(updatedSocialLinks);
         }

@@ -16,6 +16,7 @@ import { GithubIcon, LinkedinIcon, InstagramIcon, TelegramIcon } from '../compon
 import { checkApiHealth } from '../services/api';
 import AnimatedCounter from '../components/AnimatedCounter';
 import { usePortfolioData } from '../context/PortfolioContext';
+import { useToast } from '../admin/components/AdminToast';
 
 const defaultRotatingRoles = [
   'Full-Stack Developer (MERN)',
@@ -27,10 +28,36 @@ const defaultRotatingRoles = [
 
 export const Hero = () => {
   const { personalInfo, socialLinks } = usePortfolioData();
+  const { showToast } = useToast();
   const rotatingRoles = personalInfo.hero?.rotatingRoles && personalInfo.hero.rotatingRoles.length > 0
     ? personalInfo.hero.rotatingRoles
     : defaultRotatingRoles;
   const stats = personalInfo.hero?.stats || { mcaCpi: 8.45, enterpriseApps: 3, qaReliability: 100, techStacks: 10 };
+
+  const handleResumeDownload = async (e) => {
+    e.preventDefault();
+    if (!socialLinks?.resume || socialLinks?.resumeActive === false) {
+      showToast('Resume file abhi exist nahi karta.', 'error');
+      return;
+    }
+
+    try {
+      const filename = socialLinks.resumeName || 'Momin-Mahmmadbhai-Resume.pdf';
+      const response = await fetch(socialLinks.resume);
+      if (!response.ok) throw new Error('File not found');
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      showToast('Resume file abhi exist nahi karta.', 'error');
+    }
+  };
 
   // Typewriter effect state
   const [roleIndex, setRoleIndex] = useState(0);
@@ -274,9 +301,10 @@ export const Hero = () => {
               </a>
 
               <a
-                href={socialLinks.resume}
-                download="Momin-Mahmmadbhai-Resume.pdf"
+                href={socialLinks.resume || '#'}
+                onClick={handleResumeDownload}
                 className="btn btn-secondary"
+                title={socialLinks.resumeActive ? "Download Resume" : "Resume abhi exist nahi karta"}
               >
                 <Download size={17} />
                 <span>{personalInfo.hero?.secondaryCtaText || 'Download Resume'}</span>

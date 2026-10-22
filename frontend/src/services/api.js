@@ -574,3 +574,16 @@ export const adminDeleteUploadedFile = async (token, url) => {
   });
   return handleResponse(response);
 };
+
+export const adminDeleteResume = async (token, url = null) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/upload/resume`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ url }),
+  });
+  return handleResponse(response);
+};
+

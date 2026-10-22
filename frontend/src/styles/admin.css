@@ -1307,16 +1307,17 @@
     font-size: 0.82rem !important;
   }
   .admin-toast-container {
-    top: auto !important;
-    bottom: 20px !important;
+    top: 16px !important;
     right: 14px !important;
-    left: 14px !important;
+    bottom: auto !important;
+    left: auto !important;
     z-index: 9999 !important;
+    max-width: calc(100vw - 28px) !important;
   }
   .admin-toast {
     min-width: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    width: auto !important;
+    max-width: calc(100vw - 28px) !important;
     box-sizing: border-box !important;
     background: rgba(14, 21, 38, 0.98) !important;
     backdrop-filter: blur(14px) !important;
@@ -1345,7 +1346,7 @@
 }
 
 /* ==========================================================================
-   Resume Management Module Responsive Styles
+   Resume Management Module Styles
    ========================================================================== */
 .resume-active-card {
   border-left: 4px solid var(--accent-cyan);
@@ -1353,7 +1354,7 @@
 
 .resume-file-box {
   background: var(--bg-secondary);
-  padding: 1.15rem 1.25rem;
+  padding: 0.95rem 1.15rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   margin-bottom: 1.25rem;
@@ -1361,8 +1362,13 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 0.85rem;
+  transition: all var(--transition-fast);
+}
+
+.resume-file-box:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.75);
 }
 
 .resume-file-info-group {
@@ -1370,12 +1376,16 @@
   align-items: center;
   gap: 0.85rem;
   min-width: 0;
-  flex: 1 1 240px;
+  flex: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  text-decoration: none;
 }
 
 .resume-file-icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.28);
@@ -1384,33 +1394,71 @@
   justify-content: center;
   color: #ef4444;
   flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.resume-file-info-group:hover .resume-file-icon {
+  transform: scale(1.06);
 }
 
 .resume-file-meta {
   min-width: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .resume-file-name {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.96rem;
+  font-size: 0.95rem;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.resume-file-info-group:hover .resume-file-name {
+  color: var(--accent-cyan);
 }
 
 .resume-file-subtext {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
   margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
-.resume-file-actions {
+.resume-delete-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: var(--accent-rose);
   display: flex;
-  gap: 0.5rem;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
   flex-shrink: 0;
+  padding: 0;
+}
+
+.resume-delete-btn:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: var(--accent-rose);
+  transform: scale(1.08);
+}
+
+.resume-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .resume-upload-dropzone {
@@ -1430,37 +1478,26 @@
 
 @media (max-width: 640px) {
   .resume-file-box {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    padding: 1rem !important;
-    gap: 0.85rem !important;
+    padding: 0.85rem 0.95rem !important;
+    gap: 0.65rem !important;
   }
-  .resume-file-info-group {
-    width: 100% !important;
-    flex: none !important;
+  .resume-file-icon {
+    width: 38px !important;
+    height: 38px !important;
   }
   .resume-file-name {
-    font-size: 0.92rem !important;
+    font-size: 0.88rem !important;
     white-space: normal !important;
     word-break: break-all !important;
     line-height: 1.35 !important;
   }
-  .resume-file-actions {
-    width: 100% !important;
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 0.5rem !important;
-    padding-top: 0.75rem !important;
-    border-top: 1px solid var(--border-subtle) !important;
-  }
-  .resume-file-actions .admin-btn {
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 0.65rem 0.5rem !important;
-    font-size: 0.82rem !important;
+  .resume-delete-btn {
+    width: 34px !important;
+    height: 34px !important;
   }
   .resume-upload-dropzone {
     padding: 1.5rem 1rem !important;
   }
 }
+
 

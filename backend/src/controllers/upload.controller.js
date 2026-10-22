@@ -157,8 +157,65 @@ const deleteFile = async (req, res, next) => {
   }
 };
 
+/**
+ * Handle explicit deletion of resume from Cloudinary and Settings
+ * DELETE /api/v1/upload/resume
+ */
+const deleteResumeFile = async (req, res, next) => {
+  try {
+    console.log('[Delete Resume] Processing resume removal request');
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings();
+    }
+
+    // 1. Purge all files in Cloudinary resumes folder
+    try {
+      const rootFolder = (env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO').trim();
+      const resumeFolder = `${rootFolder}/resumes`;
+      console.log(`[Delete Resume] Purging Cloudinary resumes in ${resumeFolder}`);
+      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'raw' });
+      await cloudinary.api.delete_resources_by_prefix(resumeFolder, { resource_type: 'image' });
+      const targetUrl = req.body?.url || settings.resume?.url;
+      if (targetUrl) {
+        await deleteFromCloudinary(targetUrl);
+      }
+    } catch (cErr) {
+      console.warn('[Delete Resume] Cloudinary cleanup notice:', cErr.message);
+    }
+
+    // 2. Remove local synced PDF if exists
+    try {
+      const localPdf = path.resolve(__dirname, '../../../frontend/public/assets/resume/Momin-Mahmmadbhai-Resume.pdf');
+      if (fs.existsSync(localPdf)) {
+        fs.unlinkSync(localPdf);
+      }
+    } catch (fErr) {
+      console.warn('[Delete Resume] Local unlink notice:', fErr.message);
+    }
+
+    // 3. Clear resume fields in Settings model
+    settings.resume = {
+      url: '',
+      fileName: '',
+      fileSize: '',
+      isDownloadActive: false,
+    };
+    await settings.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Resume removed successfully from database and Cloudinary storage.',
+      data: settings.resume,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   uploadImageFile,
   uploadResumeFile,
   deleteFile,
+  deleteResumeFile,
 };

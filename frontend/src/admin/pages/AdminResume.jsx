@@ -7,13 +7,16 @@ import {
   XCircle,
   Save,
   Loader2,
-  Eye,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import {
   adminGetSettings,
   adminUpdateResumeSettings,
   adminUploadResume,
+  adminDeleteResume,
+  adminDeleteUploadedFile,
 } from '../../services/api';
 import { useToast } from '../components/AdminToast';
 import { usePortfolioData } from '../../context/PortfolioContext';
@@ -27,14 +30,14 @@ export const AdminResume = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [downloadingTest, setDownloadingTest] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef(null);
 
   const [resumeData, setResumeData] = useState({
-    url: '/assets/resume/Momin-Mahmmadbhai-Resume.pdf',
-    fileName: 'Momin-Mahmmadbhai-Resume.pdf',
-    fileSize: '339 KB',
-    isDownloadActive: true,
+    url: '',
+    fileName: '',
+    fileSize: '',
+    isDownloadActive: false,
   });
 
   const fetchResumeSettings = async () => {
@@ -42,10 +45,10 @@ export const AdminResume = () => {
       const res = await adminGetSettings();
       if (res.success && res.data?.resume) {
         setResumeData({
-          url: res.data.resume.url || '/assets/resume/Momin-Mahmmadbhai-Resume.pdf',
-          fileName: res.data.resume.fileName || 'Momin-Mahmmadbhai-Resume.pdf',
-          fileSize: res.data.resume.fileSize || '339 KB',
-          isDownloadActive: res.data.resume.isDownloadActive !== undefined ? res.data.resume.isDownloadActive : true,
+          url: res.data.resume.url || '',
+          fileName: res.data.resume.fileName || '',
+          fileSize: res.data.resume.fileSize || '',
+          isDownloadActive: res.data.resume.isDownloadActive !== undefined ? res.data.resume.isDownloadActive : false,
         });
       }
     } catch {
@@ -84,12 +87,13 @@ export const AdminResume = () => {
           url: res.data.url,
           fileName: res.data.fileName || file.name,
           fileSize: res.data.fileSize || `${Math.round(file.size / 1024)} KB`,
+          isDownloadActive: true,
         };
         setResumeData(updated);
 
         // Auto-save resume settings with new URL
         await adminUpdateResumeSettings(token, updated);
-        showToast('Resume updated and activated successfully!', 'success');
+        showToast('Resume uploaded and activated successfully!', 'success');
         refreshPortfolio();
       }
     } catch (err) {
@@ -116,57 +120,52 @@ export const AdminResume = () => {
     }
   };
 
-  const handlePreview = (e) => {
-    e.preventDefault();
+  const handleOpenFile = () => {
     if (!resumeData?.url) {
-      showToast('No active resume URL found.', 'error');
+      showToast('Resume file abhi exist nahi karta.', 'error');
       return;
     }
-    // Directly open PDF in browser
     window.open(resumeData.url, '_blank', 'noopener,noreferrer');
   };
 
-  const handleDownloadTest = async (e) => {
-    e.preventDefault();
-    if (!resumeData?.url) {
-      showToast('No active resume file available to download.', 'error');
+  const handleDeleteResume = async (e) => {
+    e.stopPropagation();
+    if (!window.confirm('Kya aap sach me resume delete karna chahte ho? Ye database aur storage dono se permanently remove ho jayega.')) {
       return;
     }
 
-    setDownloadingTest(true);
+    setDeleting(true);
     try {
-      const targetName = resumeData.fileName || 'Momin-Mahmmadbhai-Resume.pdf';
-      const safeFilename = targetName.toLowerCase().endsWith('.pdf') ? targetName : `${targetName}.pdf`;
-
-      // Fetch as blob for immediate browser download with exact filename
-      const response = await fetch(resumeData.url);
-      if (!response.ok) throw new Error('Download request failed');
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = safeFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      // Fallback: direct download using Cloudinary attachment or local file
-      const fallbackUrl = resumeData.url.includes('/upload/')
-        ? resumeData.url.replace('/upload/', `/upload/fl_attachment:${encodeURIComponent((resumeData.fileName || 'Resume').replace(/\.pdf$/i, ''))}/`)
-        : '/assets/resume/Momin-Mahmmadbhai-Resume.pdf';
-
-      const link = document.createElement('a');
-      link.href = fallbackUrl;
-      link.download = resumeData.fileName || 'Resume.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (resumeData.url) {
+        try {
+          await adminDeleteUploadedFile(token, resumeData.url);
+        } catch {
+          // ignore
+        }
+      }
+      try {
+        await adminDeleteResume(token, resumeData.url);
+      } catch {
+        // ignore
+      }
+      const cleared = {
+        url: '',
+        fileName: '',
+        fileSize: '',
+        isDownloadActive: false,
+      };
+      setResumeData(cleared);
+      await adminUpdateResumeSettings(token, cleared);
+      refreshPortfolio();
+      showToast('Resume file successfully remove ho gayi.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Resume delete karne me problem aayi.', 'error');
     } finally {
-      setDownloadingTest(false);
+      setDeleting(false);
     }
   };
+
+  const hasResume = Boolean(resumeData?.url && resumeData?.fileName);
 
   return (
     <div>
@@ -185,7 +184,7 @@ export const AdminResume = () => {
           type="button"
           className="admin-btn admin-btn-primary"
           onClick={handleSaveSettings}
-          disabled={saving || loading || uploading}
+          disabled={saving || loading || uploading || deleting}
         >
           {saving ? (
             <>
@@ -243,60 +242,77 @@ export const AdminResume = () => {
                 </div>
 
                 <div
-                  className={`admin-badge ${resumeData.isDownloadActive ? 'admin-badge-success' : 'admin-badge-danger'}`}
+                  className={`admin-badge ${hasResume && resumeData.isDownloadActive ? 'admin-badge-success' : 'admin-badge-danger'}`}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.75rem' }}
                 >
-                  {resumeData.isDownloadActive ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
-                  <span>{resumeData.isDownloadActive ? 'Download Active' : 'Download Disabled'}</span>
+                  {hasResume && resumeData.isDownloadActive ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                  <span>{hasResume && resumeData.isDownloadActive ? 'Download Active' : 'Download Disabled'}</span>
                 </div>
               </div>
 
-              {/* Active Document Details */}
-              <div className="resume-file-box">
-                <div className="resume-file-info-group">
-                  <div className="resume-file-icon">
-                    <FileText size={24} />
-                  </div>
-                  <div className="resume-file-meta">
-                    <div className="resume-file-name" title={resumeData.fileName}>
-                      {resumeData.fileName}
+              {/* Active Document Details or Empty State */}
+              {hasResume ? (
+                <div className="resume-file-box">
+                  {/* Clickable file row: clicking/touching opens file inline in browser */}
+                  <div
+                    className="resume-file-info-group"
+                    onClick={handleOpenFile}
+                    title="Click or tap to open resume in browser"
+                  >
+                    <div className="resume-file-icon">
+                      <FileText size={22} />
                     </div>
-                    <div className="resume-file-subtext">
-                      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-                        Size: {resumeData.fileSize}
-                      </span>
+                    <div className="resume-file-meta">
+                      <div className="resume-file-name">
+                        <span>{resumeData.fileName}</span>
+                        <ExternalLink size={13} style={{ opacity: 0.65, flexShrink: 0 }} />
+                      </div>
+                      <div className="resume-file-subtext">
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          Size: {resumeData.fileSize || 'PDF'}
+                        </span>
+                        <span>•</span>
+                        <span style={{ color: 'var(--accent-cyan)' }}>Tap to view file</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="resume-file-actions">
+                  {/* Clean X button to permanently remove resume */}
                   <button
                     type="button"
-                    onClick={handlePreview}
-                    className="admin-btn admin-btn-secondary admin-btn-sm"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                    title="Open PDF preview in browser tab"
+                    onClick={handleDeleteResume}
+                    disabled={deleting}
+                    className="resume-delete-btn"
+                    title="Resume delete karein (database aur storage dono se)"
                   >
-                    <Eye size={14} />
-                    <span>Preview</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadTest}
-                    disabled={downloadingTest}
-                    className="admin-btn admin-btn-primary admin-btn-sm"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                    title="Directly download resume file"
-                  >
-                    {downloadingTest ? (
-                      <Loader2 size={14} className="spin-animation" />
+                    {deleting ? (
+                      <Loader2 size={16} className="spin-animation" />
                     ) : (
-                      <FileDown size={14} />
+                      <X size={18} />
                     )}
-                    <span>{downloadingTest ? 'Downloading...' : 'Download Test'}</span>
                   </button>
                 </div>
-              </div>
+              ) : (
+                <div
+                  style={{
+                    padding: '1.35rem 1rem',
+                    textAlign: 'center',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px dashed var(--border-subtle)',
+                    marginBottom: '1.25rem',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.88rem',
+                  }}
+                >
+                  <p style={{ margin: 0, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                    Abhi koi resume file exist nahi karti.
+                  </p>
+                  <span style={{ fontSize: '0.78rem', marginTop: '0.25rem', display: 'block' }}>
+                    Niche diye gaye box me PDF drop karke new resume upload karein.
+                  </span>
+                </div>
+              )}
 
               {/* Upload New File Dropzone */}
               <div>
@@ -381,7 +397,7 @@ export const AdminResume = () => {
                     Enable "Download CV / Resume" Button
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                    If unchecked, the download button in Hero and Contact sections will be hidden.
+                    If unchecked, the download button in Hero and Navigation will show as unavailable.
                   </div>
                 </div>
               </label>
