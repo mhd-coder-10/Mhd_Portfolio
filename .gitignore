@@ -7,6 +7,10 @@ node_modules/
 dist/
 build/
 
+# Local Uploads (Cloudinary used for all media/documents)
+uploads/
+backend/uploads/
+
 # Environment variables
 .env
 .env.*

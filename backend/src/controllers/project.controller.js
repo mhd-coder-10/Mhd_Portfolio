@@ -1,4 +1,5 @@
 const Project = require('../models/project.model');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Get all projects
@@ -85,20 +86,35 @@ const createProject = async (req, res, next) => {
  */
 const updateProject = async (req, res, next) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!project) {
+    const existing = await Project.findById(req.params.id);
+    if (!existing) {
       return res.status(404).json({
         success: false,
         message: 'Project not found.',
       });
     }
+
+    // If main image is being changed or cleared, remove old image from Cloudinary
+    if (req.body.image !== undefined && existing.image && existing.image !== req.body.image) {
+      await deleteFromCloudinary(existing.image);
+    }
+
+    // If galleryImages are modified, remove deleted images from Cloudinary
+    if (Array.isArray(req.body.galleryImages) && Array.isArray(existing.galleryImages)) {
+      for (const oldImg of existing.galleryImages) {
+        if (!req.body.galleryImages.includes(oldImg)) {
+          await deleteFromCloudinary(oldImg);
+        }
+      }
+    }
+
+    Object.assign(existing, req.body);
+    await existing.save();
+
     return res.status(200).json({
       success: true,
       message: 'Project updated successfully.',
-      data: project,
+      data: existing,
     });
   } catch (error) {
     next(error);
@@ -111,13 +127,28 @@ const updateProject = async (req, res, next) => {
  */
 const deleteProject = async (req, res, next) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id);
+    const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({
         success: false,
         message: 'Project not found.',
       });
     }
+
+    // Clean up project image from Cloudinary
+    if (project.image) {
+      await deleteFromCloudinary(project.image);
+    }
+
+    // Clean up gallery images from Cloudinary
+    if (Array.isArray(project.galleryImages)) {
+      for (const img of project.galleryImages) {
+        await deleteFromCloudinary(img);
+      }
+    }
+
+    await project.deleteOne();
+
     return res.status(200).json({
       success: true,
       message: 'Project deleted successfully.',

@@ -382,7 +382,7 @@ export const AdminResume = () => {
             >
               <AlertCircle size={16} style={{ color: 'var(--accent-cyan)', flexShrink: 0, marginTop: '2px' }} />
               <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-                When you upload a new PDF via the dropzone, it is securely stored on the server under <code>/uploads/resumes/</code> and your live portfolio updates immediately.
+                When you upload a new PDF via the dropzone, it is securely uploaded to Cloudinary (replacing previous versions) and your live portfolio updates immediately.
               </p>
             </div>
           </div>

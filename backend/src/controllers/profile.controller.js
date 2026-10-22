@@ -1,4 +1,5 @@
 const Profile = require('../models/profile.model');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Get Profile
@@ -29,6 +30,14 @@ const updateProfile = async (req, res, next) => {
     if (!profile) {
       profile = new Profile(req.body);
     } else {
+      // If profileImage is being changed or cleared, remove previous image from Cloudinary
+      if (
+        req.body.profileImage !== undefined &&
+        profile.profileImage &&
+        profile.profileImage !== req.body.profileImage
+      ) {
+        await deleteFromCloudinary(profile.profileImage);
+      }
       Object.assign(profile, req.body);
     }
     await profile.save();

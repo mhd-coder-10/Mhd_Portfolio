@@ -20,6 +20,10 @@ const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'mhd.developer10@gmail.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Admin@Portfolio2026!',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+  CLOUDINARY_FOLDER_NAME: process.env.CLOUDINARY_FOLDER_NAME || 'MHD_PORTFOLIO',
 };
 
 module.exports = env;

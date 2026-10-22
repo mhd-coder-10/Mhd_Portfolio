@@ -1,4 +1,5 @@
 const Settings = require('../models/settings.model');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Get website settings
@@ -79,6 +80,16 @@ const updateResume = async (req, res, next) => {
     if (!settings) {
       settings = new Settings();
     }
+
+    // If new resume URL is provided and differs from old one, delete old from Cloudinary
+    if (
+      req.body.url &&
+      settings.resume?.url &&
+      settings.resume.url !== req.body.url
+    ) {
+      await deleteFromCloudinary(settings.resume.url);
+    }
+
     settings.resume = { ...settings.resume.toObject(), ...req.body };
     await settings.save();
 

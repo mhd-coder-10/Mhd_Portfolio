@@ -1,4 +1,5 @@
 const Certification = require('../models/certification.model');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * Get all certifications
@@ -41,20 +42,30 @@ const createCertification = async (req, res, next) => {
  */
 const updateCertification = async (req, res, next) => {
   try {
-    const certification = await Certification.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!certification) {
+    const existing = await Certification.findById(req.params.id);
+    if (!existing) {
       return res.status(404).json({
         success: false,
         message: 'Certification not found.',
       });
     }
+
+    // If certificateImage is changed or cleared, remove old file from Cloudinary
+    if (
+      req.body.certificateImage !== undefined &&
+      existing.certificateImage &&
+      existing.certificateImage !== req.body.certificateImage
+    ) {
+      await deleteFromCloudinary(existing.certificateImage);
+    }
+
+    Object.assign(existing, req.body);
+    await existing.save();
+
     return res.status(200).json({
       success: true,
       message: 'Certification updated successfully.',
-      data: certification,
+      data: existing,
     });
   } catch (error) {
     next(error);
@@ -67,13 +78,20 @@ const updateCertification = async (req, res, next) => {
  */
 const deleteCertification = async (req, res, next) => {
   try {
-    const certification = await Certification.findByIdAndDelete(req.params.id);
+    const certification = await Certification.findById(req.params.id);
     if (!certification) {
       return res.status(404).json({
         success: false,
         message: 'Certification not found.',
       });
     }
+
+    if (certification.certificateImage) {
+      await deleteFromCloudinary(certification.certificateImage);
+    }
+
+    await certification.deleteOne();
+
     return res.status(200).json({
       success: true,
       message: 'Certification deleted successfully.',

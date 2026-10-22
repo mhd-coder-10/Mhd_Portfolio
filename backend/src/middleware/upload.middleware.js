@@ -1,40 +1,8 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
-// Ensure upload directories exist
-const imagesDir = path.resolve(__dirname, '../../uploads/images');
-const resumesDir = path.resolve(__dirname, '../../uploads/resumes');
-
-if (!fs.existsSync(imagesDir)) {
-  fs.mkdirSync(imagesDir, { recursive: true });
-}
-if (!fs.existsSync(resumesDir)) {
-  fs.mkdirSync(resumesDir, { recursive: true });
-}
-
-// Storage engine for images
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, imagesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `img-${uniqueSuffix}${ext}`);
-  },
-});
-
-// Storage engine for resumes
-const resumeStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, resumesDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `Resume-${Date.now()}${ext}`);
-  },
-});
+// Memory storage: files are held in memory as Buffers and streamed directly to Cloudinary
+const storage = multer.memoryStorage();
 
 // Media and certificate filter (Images and PDFs)
 const imageFilter = (req, file, cb) => {
@@ -60,14 +28,14 @@ const resumeFilter = (req, file, cb) => {
 };
 
 const uploadImage = multer({
-  storage: imageStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB for images & certificate PDFs
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
   fileFilter: imageFilter,
 });
 
 const uploadResume = multer({
-  storage: resumeStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
   fileFilter: resumeFilter,
 });
 

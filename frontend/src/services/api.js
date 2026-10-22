@@ -531,9 +531,12 @@ export const adminDeleteMessage = async (token, id) => {
    FILE UPLOADS
    ========================================================================== */
 
-export const adminUploadImage = async (token, file) => {
+export const adminUploadImage = async (token, file, previousUrl = null) => {
   const formData = new FormData();
   formData.append('image', file);
+  if (previousUrl) {
+    formData.append('previousUrl', previousUrl);
+  }
   const response = await fetch(`${API_BASE_URL}/api/v1/upload/image`, {
     method: 'POST',
     headers: {
@@ -553,6 +556,18 @@ export const adminUploadResume = async (token, file) => {
       Authorization: `Bearer ${token}`,
     },
     body: formData,
+  });
+  return handleResponse(response);
+};
+
+export const adminDeleteUploadedFile = async (token, url) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/upload`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ url }),
   });
   return handleResponse(response);
 };

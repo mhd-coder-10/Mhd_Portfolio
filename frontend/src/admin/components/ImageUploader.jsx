@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, X, Loader2, Link, FileText, ExternalLink } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { adminUploadImage } from '../../services/api';
+import { adminUploadImage, adminDeleteUploadedFile } from '../../services/api';
 import { useToast } from './AdminToast';
 
 export const ImageUploader = ({
@@ -31,7 +31,8 @@ export const ImageUploader = ({
 
     setUploading(true);
     try {
-      const response = await adminUploadImage(token, file);
+      // Pass existing value as previousUrl so the backend deletes the old Cloudinary file automatically
+      const response = await adminUploadImage(token, file, value);
       if (response.success && response.data?.url) {
         onChange(response.data.url);
         showToast(file.type.includes('pdf') ? 'PDF uploaded successfully!' : 'Image uploaded successfully!', 'success');
@@ -42,6 +43,17 @@ export const ImageUploader = ({
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const handleRemove = async () => {
+    if (value && value.includes('cloudinary.com')) {
+      try {
+        await adminDeleteUploadedFile(token, value);
+      } catch (err) {
+        console.warn('Failed to delete old file from Cloudinary:', err);
+      }
+    }
+    onChange('');
   };
 
   const handleApplyUrl = () => {
@@ -163,7 +175,7 @@ export const ImageUploader = ({
             <button
               type="button"
               className="admin-btn admin-btn-danger admin-btn-sm"
-              onClick={() => onChange('')}
+              onClick={handleRemove}
               title="Remove File"
             >
               <X size={14} />
