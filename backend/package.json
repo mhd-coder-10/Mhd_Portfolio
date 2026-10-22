@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node --watch-path=src src/server.js",
     "reset-admin": "node src/utils/resetAdmin.js"
   },
   "dependencies": {
