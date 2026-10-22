@@ -28,6 +28,7 @@ export const AdminProfile = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -228,16 +229,41 @@ export const AdminProfile = () => {
 
           <ImageUploader
             value={formData.profileImage}
-            onChange={(url) => setFormData((prev) => ({ ...prev, profileImage: url }))}
+            onChange={(url) => {
+              setFormData((prev) => ({ ...prev, profileImage: url }));
+              // Proactively persist profile image update
+              adminUpdateProfile(token, { ...formData, profileImage: url })
+                .then(() => refreshPortfolio())
+                .catch((err) => console.warn('Background auto-save notice:', err.message));
+            }}
+            onUploadStateChange={setImageUploading}
             label="Avatar / Profile Photo (Featured in Hero & About sections)"
             hint="Upload or change your portrait photo. It will update immediately across both the Hero greeting and the About showcase."
           />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-          <button type="submit" disabled={saving} className="admin-btn admin-btn-primary">
-            {saving ? <Loader2 size={16} className="spin-animation" /> : <Save size={16} />}
-            <span>{saving ? 'Saving...' : 'Save Profile Changes'}</span>
+          <button
+            type="submit"
+            disabled={saving || imageUploading}
+            className="admin-btn admin-btn-primary"
+          >
+            {saving ? (
+              <>
+                <Loader2 size={16} className="spin-animation" />
+                <span>Saving Profile...</span>
+              </>
+            ) : imageUploading ? (
+              <>
+                <Loader2 size={16} className="spin-animation" />
+                <span>Uploading Photo to Cloudinary...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                <span>Save Profile Changes</span>
+              </>
+            )}
           </button>
         </div>
       </form>

@@ -52,6 +52,7 @@ export const AdminCertifications = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(initialCertState);
   const [saving, setSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [skillInput, setSkillInput] = useState('');
 
   // Delete modal
@@ -475,6 +476,7 @@ export const AdminCertifications = () => {
               <ImageUploader
                 value={formData.certificateImage}
                 onChange={(url) => setFormData({ ...formData, certificateImage: url })}
+                onUploadStateChange={setImageUploading}
                 label="Certificate File (Image or PDF Document)"
                 hint="Upload Certificate image (PNG, JPG, WEBP) or PDF document (max 10MB)"
                 accept="image/*,application/pdf,.pdf"
@@ -507,15 +509,20 @@ export const AdminCertifications = () => {
                   type="button"
                   className="admin-btn admin-btn-secondary"
                   onClick={() => setModalOpen(false)}
-                  disabled={saving}
+                  disabled={saving || imageUploading}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving || imageUploading}>
                   {saving ? (
                     <>
                       <Loader2 size={16} className="admin-spinner" />
                       <span>Saving...</span>
+                    </>
+                  ) : imageUploading ? (
+                    <>
+                      <Loader2 size={16} className="admin-spinner" />
+                      <span>Uploading to Cloudinary...</span>
                     </>
                   ) : (
                     <>

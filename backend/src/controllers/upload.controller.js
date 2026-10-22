@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const Settings = require('../models/settings.model');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
@@ -23,10 +25,11 @@ const uploadImageFile = async (req, res, next) => {
 
     const isPdf = req.file.mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf');
     const folder = isPdf ? 'documents' : 'images';
+    const resourceType = isPdf ? 'raw' : 'image';
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder,
-      resource_type: 'auto',
+      resource_type: resourceType,
     });
 
     return res.status(200).json({
@@ -78,10 +81,20 @@ const uploadResumeFile = async (req, res, next) => {
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'resumes',
-      resource_type: 'auto',
+      resource_type: 'raw',
     });
 
     const sizeInKb = `${Math.round(req.file.size / 1024)} KB`;
+
+    // Sync local asset file so public downloads never fail
+    try {
+      const publicResumeDir = path.resolve(__dirname, '../../../frontend/public/assets/resume');
+      if (fs.existsSync(publicResumeDir)) {
+        fs.writeFileSync(path.join(publicResumeDir, 'Momin-Mahmmadbhai-Resume.pdf'), req.file.buffer);
+      }
+    } catch (e) {
+      console.warn('[Resume Upload] Local sync notice:', e.message);
+    }
 
     // Automatically update Settings.resume with new Cloudinary URL
     settings.resume = {

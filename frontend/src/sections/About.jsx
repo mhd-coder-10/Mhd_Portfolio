@@ -81,9 +81,12 @@ export const About = () => {
                 }}
               >
                 <img
-                  src={personalInfo.profileImage}
+                  src={personalInfo.profileImage || '/assets/profile-momin.jpg'}
                   alt={personalInfo.name}
                   className="about-portrait-img"
+                  onError={(e) => {
+                    e.target.src = '/assets/profile-momin.jpg';
+                  }}
                   style={{
                     width: '100%',
                     height: '100%',

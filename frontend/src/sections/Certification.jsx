@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Award, CheckCircle2, FileText, ExternalLink, Eye, X, Calendar, ShieldCheck } from 'lucide-react';
 import SectionHeader from '../components/SectionHeader';
 import { usePortfolioData } from '../context/PortfolioContext';
+import { API_BASE_URL } from '../services/api';
 
 export const Certification = () => {
   const { certificationData, certifications } = usePortfolioData();
@@ -105,7 +106,9 @@ export const Certification = () => {
                           <div className="cert-pdf-sub">Document Attachment</div>
                         </div>
                         <a
-                          href={cert.certificateImage}
+                          href={cert.certificateImage?.startsWith('http')
+                            ? `${API_BASE_URL}/api/v1/public/document/view?url=${encodeURIComponent(cert.certificateImage)}`
+                            : cert.certificateImage}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-primary cert-pdf-btn"

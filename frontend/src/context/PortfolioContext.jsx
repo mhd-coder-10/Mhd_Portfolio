@@ -11,7 +11,7 @@ import {
   navigationLinks as defaultNavLinks,
 } from '../config/portfolioData';
 import defaultSocialLinks from '../config/socialLinks';
-import { fetchPublicPortfolio } from '../services/api';
+import { fetchPublicPortfolio, API_BASE_URL } from '../services/api';
 
 const PortfolioContext = createContext(null);
 
@@ -42,6 +42,7 @@ export const PortfolioProvider = ({ children }) => {
           setPersonalInfo({
             ...defaultPersonalInfo,
             ...d.profile,
+            profileImage: d.profile.profileImage || defaultPersonalInfo.profileImage,
             hero: d.profile.hero || defaultPersonalInfo.hero,
             about: d.profile.about || defaultPersonalInfo.about,
           });
@@ -114,9 +115,10 @@ export const PortfolioProvider = ({ children }) => {
             });
           }
 
-          // Resume dynamic path
-          if (d.settings?.resume?.url) {
-            updatedSocialLinks.resume = d.settings.resume.url;
+          // Resume dynamic path: serve synced resume file so public download works instantly without 401 errors
+          updatedSocialLinks.resume = '/assets/resume/Momin-Mahmmadbhai-Resume.pdf';
+          if (d.settings?.resume?.isDownloadActive !== undefined) {
+            updatedSocialLinks.resumeActive = d.settings.resume.isDownloadActive;
           }
 
           setSocialLinks(updatedSocialLinks);

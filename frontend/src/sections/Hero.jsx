@@ -167,8 +167,11 @@ export const Hero = () => {
               >
                 <div style={{ position: 'relative', width: '44px', height: '44px' }}>
                   <img
-                    src={personalInfo.profileImage}
+                    src={personalInfo.profileImage || '/assets/profile-momin.jpg'}
                     alt={personalInfo.name}
+                    onError={(e) => {
+                      e.target.src = '/assets/profile-momin.jpg';
+                    }}
                     style={{
                       width: '44px',
                       height: '44px',

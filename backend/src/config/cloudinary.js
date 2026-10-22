@@ -110,6 +110,17 @@ const deleteFromCloudinary = async (urlOrPublicId) => {
       console.log(`[Cloudinary] Delete attempt 3 (raw):`, res.result);
     }
 
+    // For raw files, public_id might retain original extension
+    if (res.result !== 'ok' && urlOrPublicId.includes('cloudinary.com')) {
+      const folderIndex = urlOrPublicId.indexOf(rootFolder);
+      if (folderIndex !== -1) {
+        const rawWithExt = urlOrPublicId.substring(folderIndex).split('?')[0];
+        let resRaw = await cloudinary.uploader.destroy(rawWithExt, { resource_type: 'raw', invalidate: true });
+        console.log(`[Cloudinary] Delete attempt 4 (raw with ext):`, resRaw.result);
+        if (resRaw.result === 'ok') return true;
+      }
+    }
+
     return res.result === 'ok';
   } catch (error) {
     console.error('[Cloudinary] Failed to delete file:', error.message);

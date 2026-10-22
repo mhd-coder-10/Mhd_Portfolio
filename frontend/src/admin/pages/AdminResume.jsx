@@ -133,12 +133,17 @@ export const AdminResume = () => {
           type="button"
           className="admin-btn admin-btn-primary"
           onClick={handleSaveSettings}
-          disabled={saving || loading}
+          disabled={saving || loading || uploading}
         >
           {saving ? (
             <>
               <Loader2 size={16} className="admin-spinner" />
               <span>Saving...</span>
+            </>
+          ) : uploading ? (
+            <>
+              <Loader2 size={16} className="admin-spinner" />
+              <span>Uploading PDF...</span>
             </>
           ) : (
             <>

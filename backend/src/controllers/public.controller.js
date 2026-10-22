@@ -78,6 +78,104 @@ const getPublicPortfolio = async (req, res, next) => {
   }
 };
 
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Public endpoint to download or view the current resume
+ * GET /api/v1/public/resume/download
+ */
+const downloadResume = async (req, res, next) => {
+  try {
+    const settings = await Settings.findOne();
+    const resumeUrl = settings?.resume?.url;
+    const fileName = settings?.resume?.fileName || 'Momin-Mahmmadbhai-Resume.pdf';
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    const serveLocalFallback = () => {
+      const fallbackPath = path.resolve(__dirname, '../../../frontend/public/assets/resume/Momin-Mahmmadbhai-Resume.pdf');
+      if (fs.existsSync(fallbackPath)) {
+        return fs.createReadStream(fallbackPath).pipe(res);
+      }
+      return res.status(404).json({ success: false, message: 'Resume file not found' });
+    };
+
+    if (resumeUrl && resumeUrl.startsWith('http')) {
+      const client = resumeUrl.startsWith('https') ? https : http;
+      client.get(resumeUrl, (streamRes) => {
+        if (streamRes.statusCode === 200) {
+          streamRes.pipe(res);
+        } else {
+          serveLocalFallback();
+        }
+      }).on('error', () => {
+        serveLocalFallback();
+      });
+    } else if (resumeUrl && resumeUrl.startsWith('/')) {
+      const localPath = path.resolve(__dirname, '../../..', resumeUrl.replace(/^\/+/, ''));
+      if (fs.existsSync(localPath)) {
+        fs.createReadStream(localPath).pipe(res);
+      } else {
+        serveLocalFallback();
+      }
+    } else {
+      serveLocalFallback();
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Public endpoint to safely view documents/certificates without CORS or Cloudinary direct restrictions
+ * GET /api/v1/public/document/view?url=...
+ */
+const viewDocument = async (req, res, next) => {
+  try {
+    const fileUrl = req.query.url;
+    if (!fileUrl) {
+      return res.status(400).send('File URL is required');
+    }
+
+    const isPdf = fileUrl.toLowerCase().includes('.pdf');
+    if (isPdf) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="certificate.pdf"');
+    }
+
+    if (fileUrl.startsWith('http')) {
+      const client = fileUrl.startsWith('https') ? https : http;
+      client.get(fileUrl, (streamRes) => {
+        if (streamRes.statusCode === 200) {
+          if (streamRes.headers['content-type'] && !isPdf) {
+            res.setHeader('Content-Type', streamRes.headers['content-type']);
+          }
+          streamRes.pipe(res);
+        } else {
+          res.redirect(fileUrl);
+        }
+      }).on('error', () => {
+        res.redirect(fileUrl);
+      });
+    } else {
+      const localPath = path.resolve(__dirname, '../../..', fileUrl.replace(/^\/+/, ''));
+      if (fs.existsSync(localPath)) {
+        fs.createReadStream(localPath).pipe(res);
+      } else {
+        res.status(404).send('Document not found');
+      }
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPublicPortfolio,
+  downloadResume,
+  viewDocument,
 };
