@@ -547,9 +547,12 @@ export const adminUploadImage = async (token, file, previousUrl = null) => {
   return handleResponse(response);
 };
 
-export const adminUploadResume = async (token, file) => {
+export const adminUploadResume = async (token, file, previousUrl = null) => {
   const formData = new FormData();
   formData.append('resume', file);
+  if (previousUrl) {
+    formData.append('previousUrl', previousUrl);
+  }
   const response = await fetch(`${API_BASE_URL}/api/v1/upload/resume`, {
     method: 'POST',
     headers: {

@@ -77,7 +77,7 @@ export const AdminResume = () => {
 
     setUploading(true);
     try {
-      const res = await adminUploadResume(token, file);
+      const res = await adminUploadResume(token, file, resumeData?.url);
       if (res.success && res.data) {
         const updated = {
           ...resumeData,

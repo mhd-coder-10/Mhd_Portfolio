@@ -17,6 +17,7 @@ const uploadImageFile = async (req, res, next) => {
     // If an old/previous URL was passed, delete the previous file from Cloudinary
     const previousUrl = req.body.previousUrl || req.body.oldUrl;
     if (previousUrl) {
+      console.log(`[Upload Image] Replacing previous file: ${previousUrl}`);
       await deleteFromCloudinary(previousUrl);
     }
 
@@ -58,13 +59,20 @@ const uploadResumeFile = async (req, res, next) => {
       });
     }
 
-    // Automatically retrieve settings and delete any previous resume from Cloudinary
+    // Retrieve settings to find existing resume URL
     let settings = await Settings.findOne();
     if (!settings) {
       settings = new Settings();
     }
 
-    if (settings.resume?.url) {
+    // Delete existing resume: check req.body.previousUrl and settings.resume?.url
+    const previousUrl = req.body.previousUrl || req.body.oldUrl;
+    if (previousUrl) {
+      console.log(`[Upload Resume] Deleting previous resume from request: ${previousUrl}`);
+      await deleteFromCloudinary(previousUrl);
+    }
+    if (settings.resume?.url && settings.resume.url !== previousUrl) {
+      console.log(`[Upload Resume] Deleting previous resume from settings: ${settings.resume.url}`);
       await deleteFromCloudinary(settings.resume.url);
     }
 
@@ -110,6 +118,7 @@ const deleteFile = async (req, res, next) => {
       });
     }
 
+    console.log(`[Delete Endpoint] Explicitly deleting file: ${target}`);
     const deleted = await deleteFromCloudinary(target);
     return res.status(200).json({
       success: true,

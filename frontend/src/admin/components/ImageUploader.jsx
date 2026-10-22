@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, X, Loader2, Link, FileText, ExternalLink } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, Loader2, Link, FileText, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { adminUploadImage, adminDeleteUploadedFile } from '../../services/api';
 import { useToast } from './AdminToast';
@@ -31,11 +31,16 @@ export const ImageUploader = ({
 
     setUploading(true);
     try {
-      // Pass existing value as previousUrl so the backend deletes the old Cloudinary file automatically
+      // Pass existing value as previousUrl so Cloudinary deletes the old file automatically
       const response = await adminUploadImage(token, file, value);
       if (response.success && response.data?.url) {
         onChange(response.data.url);
-        showToast(file.type.includes('pdf') ? 'PDF uploaded successfully!' : 'Image uploaded successfully!', 'success');
+        showToast(
+          value
+            ? (file.type.includes('pdf') ? 'PDF replaced successfully!' : 'Image replaced successfully!')
+            : (file.type.includes('pdf') ? 'PDF uploaded successfully!' : 'Image uploaded successfully!'),
+          'success'
+        );
       }
     } catch (err) {
       showToast(err.message || 'File upload failed.', 'error');
@@ -49,8 +54,9 @@ export const ImageUploader = ({
     if (value && value.includes('cloudinary.com')) {
       try {
         await adminDeleteUploadedFile(token, value);
+        showToast('File deleted from Cloudinary.', 'info');
       } catch (err) {
-        console.warn('Failed to delete old file from Cloudinary:', err);
+        console.warn('Failed to delete file from Cloudinary:', err);
       }
     }
     onChange('');
@@ -65,6 +71,15 @@ export const ImageUploader = ({
 
   return (
     <div className="admin-form-group">
+      {/* Hidden file input always mounted so it can be triggered from dropzone or Change button */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept={accept}
+        style={{ display: 'none' }}
+      />
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
         <label className="admin-label" style={{ margin: 0 }}>{label}</label>
         <button
@@ -161,6 +176,7 @@ export const ImageUploader = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            {/* View Button */}
             <a
               href={value}
               target="_blank"
@@ -172,11 +188,31 @@ export const ImageUploader = ({
               <ExternalLink size={13} />
               <span>View</span>
             </a>
+
+            {/* Change / Replace File Button */}
             <button
               type="button"
+              disabled={uploading}
+              className="admin-btn admin-btn-secondary admin-btn-sm"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}
+              title="Upload a new file to replace this one"
+            >
+              {uploading ? (
+                <Loader2 size={13} className="spin-animation" />
+              ) : (
+                <RefreshCw size={13} />
+              )}
+              <span>{uploading ? 'Replacing...' : 'Change'}</span>
+            </button>
+
+            {/* Remove File Button */}
+            <button
+              type="button"
+              disabled={uploading}
               className="admin-btn admin-btn-danger admin-btn-sm"
               onClick={handleRemove}
-              title="Remove File"
+              title="Delete File from Cloudinary"
             >
               <X size={14} />
               <span>Remove</span>
@@ -185,7 +221,7 @@ export const ImageUploader = ({
         </div>
       ) : (
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !uploading && fileInputRef.current?.click()}
           style={{
             border: '2px dashed var(--border-hover)',
             borderRadius: 'var(--radius-md)',
@@ -198,18 +234,10 @@ export const ImageUploader = ({
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.04)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.01)')}
         >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept={accept}
-            style={{ display: 'none' }}
-          />
-
           {uploading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--accent-cyan)' }}>
               <Loader2 size={24} className="spin-animation" />
-              <span style={{ fontSize: '0.88rem' }}>Uploading file...</span>
+              <span style={{ fontSize: '0.88rem' }}>Uploading file to Cloudinary...</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
