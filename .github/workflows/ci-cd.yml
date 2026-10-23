@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Portfolio (Backend & Frontend)
+name: CI/CD Pipeline - Portfolio
 
 on:
   push:
@@ -14,76 +14,67 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # =========================================================================
-  # 1. BACKEND CI (Syntax, Dependencies, Integrity Verification)
-  # =========================================================================
+  # Backend CI: Dependencies and syntax verification
   backend-ci:
-    name: Backend CI (Node.js & Syntax Check)
+    name: Backend CI
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛎️ Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js 20
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - name: 📦 Install Backend Dependencies
+      - name: Install Dependencies
         working-directory: ./backend
         run: npm install
 
-      - name: 🔍 Verify Backend Syntax & Startup Scripts
+      - name: Verify Syntax
         working-directory: ./backend
         run: |
           node --check src/server.js
           node --check src/app.js
-          echo "✅ Backend syntax check passed successfully!"
 
-  # =========================================================================
-  # 2. FRONTEND CI (Build Verification & Asset Validation)
-  # =========================================================================
+  # Frontend CI: Dependencies and production build
   frontend-ci:
-    name: Frontend CI (Vite Production Build)
+    name: Frontend CI
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛎️ Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js 20
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: 📦 Install Frontend Dependencies
+      - name: Install Dependencies
         working-directory: ./frontend
         run: npm install
 
-      - name: 🏗️ Build Production Bundle
+      - name: Build Production Bundle
         working-directory: ./frontend
         env:
           VITE_API_BASE_URL: https://api.momin-portfolio.placeholder
         run: npm run build
 
-      - name: 🛡️ Verify Build Output Artifacts
+      - name: Verify Build Artifacts
         working-directory: ./frontend
         run: |
-          if [ -f "dist/index.html" ]; then
-            echo "✅ Frontend production build validated successfully! (dist/index.html exists)"
-          else
-            echo "❌ dist/index.html not found! Build failed."
+          if [ ! -f "dist/index.html" ]; then
+            echo "Error: dist/index.html not found. Build failed."
             exit 1
           fi
 
-  # =========================================================================
-  # 3. DEPLOY BACKEND TO RENDER
-  # =========================================================================
+  # Deploy Backend to Render
   deploy-backend:
     name: Deploy Backend (Render)
     needs: [backend-ci]
@@ -91,25 +82,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚀 Trigger Render Deploy Hook
+      - name: Trigger Render Deploy Hook
         run: |
           if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            echo "Triggering Render deployment via Webhook..."
+            echo "Triggering Render deployment..."
             response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
             http_code=$(echo "$response" | tail -n1)
             if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-              echo "✅ Render deployment successfully triggered! (HTTP $http_code)"
+              echo "Render deployment triggered successfully (HTTP $http_code)."
             else
-              echo "⚠️ Render webhook returned HTTP $http_code. Check Render logs."
+              echo "Warning: Render deploy hook returned HTTP $http_code."
             fi
           else
-            echo "ℹ️ RENDER_DEPLOY_HOOK_URL secret not configured in GitHub Secrets."
-            echo "✅ If you connected your GitHub repo directly to Render, Render's native Git Auto-Deploy triggers automatically upon git push to 'main'!"
+            echo "RENDER_DEPLOY_HOOK_URL not configured. Relying on Render Git Auto-Deploy."
           fi
 
-  # =========================================================================
-  # 4. DEPLOY FRONTEND TO VERCEL
-  # =========================================================================
+  # Deploy Frontend to Vercel
   deploy-frontend:
     name: Deploy Frontend (Vercel)
     needs: [frontend-ci]
@@ -117,16 +105,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛎️ Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🚀 Deploy to Vercel
+      - name: Deploy to Vercel
         run: |
           if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "Deploying to Vercel via Vercel CLI..."
+            echo "Deploying to Vercel production..."
             npx --yes vercel --token "${{ secrets.VERCEL_TOKEN }}" --prod --yes ./frontend
-            echo "✅ Vercel production deployment completed!"
           else
-            echo "ℹ️ VERCEL_TOKEN secret not configured in GitHub Secrets."
-            echo "✅ If you imported your repository into Vercel, Vercel's native Git Integration automatically detects this push to 'main' and deploys the frontend!"
+            echo "VERCEL_TOKEN not configured. Relying on Vercel Git Auto-Deploy."
           fi
