@@ -47,94 +47,94 @@ const iconMap = {
 
 
 
-// Aesthetic Category Theme Colors
+// Aesthetic Category Theme Colors with full Light & Dark mode adaptation
 const getCategoryTheme = (categoryTitle = '') => {
   const cat = categoryTitle.toLowerCase();
   if (cat.includes('program') || cat.includes('language')) {
     return {
-      accent: '#3b82f6',
-      accentRgb: '59, 130, 246',
-      bgGlow: 'rgba(59, 130, 246, 0.1)',
-      border: 'rgba(59, 130, 246, 0.25)',
+      accent: 'var(--accent-indigo)',
+      bgGlow: 'rgba(var(--accent-indigo-rgb), 0.12)',
+      border: 'rgba(var(--accent-indigo-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-indigo-rgb), 0.12)',
     };
   }
   if (cat.includes('front')) {
     return {
-      accent: '#38bdf8',
-      accentRgb: '56, 189, 248',
-      bgGlow: 'rgba(56, 189, 248, 0.1)',
-      border: 'rgba(56, 189, 248, 0.25)',
+      accent: 'var(--accent-cyan)',
+      bgGlow: 'rgba(var(--accent-cyan-rgb), 0.12)',
+      border: 'rgba(var(--accent-cyan-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-cyan-rgb), 0.12)',
     };
   }
   if (cat.includes('back') || cat.includes('real-time')) {
     return {
-      accent: '#10b981',
-      accentRgb: '16, 185, 129',
-      bgGlow: 'rgba(16, 185, 129, 0.1)',
-      border: 'rgba(16, 185, 129, 0.25)',
+      accent: 'var(--accent-emerald)',
+      bgGlow: 'rgba(var(--accent-emerald-rgb), 0.12)',
+      border: 'rgba(var(--accent-emerald-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-emerald-rgb), 0.12)',
     };
   }
   if (cat.includes('data') || cat.includes('cach')) {
     return {
-      accent: '#a855f7',
-      accentRgb: '168, 85, 247',
-      bgGlow: 'rgba(168, 85, 247, 0.1)',
-      border: 'rgba(168, 85, 247, 0.25)',
+      accent: 'var(--accent-violet)',
+      bgGlow: 'rgba(var(--accent-violet-rgb), 0.12)',
+      border: 'rgba(var(--accent-violet-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-violet-rgb), 0.12)',
     };
   }
   if (cat.includes('devops') || cat.includes('observ') || cat.includes('cloud')) {
     return {
-      accent: '#06b6d4',
-      accentRgb: '6, 182, 212',
-      bgGlow: 'rgba(6, 182, 212, 0.1)',
-      border: 'rgba(6, 182, 212, 0.25)',
+      accent: 'var(--accent-cyan)',
+      bgGlow: 'rgba(var(--accent-cyan-rgb), 0.12)',
+      border: 'rgba(var(--accent-cyan-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-cyan-rgb), 0.12)',
     };
   }
   if (cat.includes('auth') || cat.includes('secur')) {
     return {
-      accent: '#f43f5e',
-      accentRgb: '244, 63, 94',
-      bgGlow: 'rgba(244, 63, 94, 0.1)',
-      border: 'rgba(244, 63, 94, 0.25)',
+      accent: 'var(--accent-rose)',
+      bgGlow: 'rgba(var(--accent-rose-rgb), 0.12)',
+      border: 'rgba(var(--accent-rose-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-rose-rgb), 0.12)',
     };
   }
   if (cat.includes('state')) {
     return {
-      accent: '#818cf8',
-      accentRgb: '129, 140, 248',
-      bgGlow: 'rgba(129, 140, 248, 0.1)',
-      border: 'rgba(129, 140, 248, 0.25)',
+      accent: 'var(--accent-indigo)',
+      bgGlow: 'rgba(var(--accent-indigo-rgb), 0.12)',
+      border: 'rgba(var(--accent-indigo-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-indigo-rgb), 0.12)',
     };
   }
   if (cat.includes('test')) {
     return {
-      accent: '#f59e0b',
-      accentRgb: '245, 158, 11',
-      bgGlow: 'rgba(245, 158, 11, 0.1)',
-      border: 'rgba(245, 158, 11, 0.25)',
+      accent: 'var(--accent-amber)',
+      bgGlow: 'rgba(var(--accent-amber-rgb), 0.12)',
+      border: 'rgba(var(--accent-amber-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-amber-rgb), 0.12)',
     };
   }
   if (cat.includes('tool') || cat.includes('concept')) {
     return {
-      accent: '#14b8a6',
-      accentRgb: '20, 184, 166',
-      bgGlow: 'rgba(20, 184, 166, 0.1)',
-      border: 'rgba(20, 184, 166, 0.25)',
+      accent: 'var(--accent-teal)',
+      bgGlow: 'rgba(var(--accent-teal-rgb), 0.12)',
+      border: 'rgba(var(--accent-teal-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-teal-rgb), 0.12)',
     };
   }
   if (cat.includes('ai')) {
     return {
-      accent: '#ec4899',
-      accentRgb: '236, 72, 153',
-      bgGlow: 'rgba(236, 72, 153, 0.1)',
-      border: 'rgba(236, 72, 153, 0.25)',
+      accent: 'var(--accent-pink)',
+      bgGlow: 'rgba(var(--accent-pink-rgb), 0.12)',
+      border: 'rgba(var(--accent-pink-rgb), 0.25)',
+      spotlight: 'rgba(var(--accent-pink-rgb), 0.12)',
     };
   }
   return {
-    accent: '#38bdf8',
-    accentRgb: '56, 189, 248',
-    bgGlow: 'rgba(56, 189, 248, 0.1)',
-    border: 'rgba(56, 189, 248, 0.2)',
+    accent: 'var(--accent-cyan)',
+    bgGlow: 'rgba(var(--accent-cyan-rgb), 0.12)',
+    border: 'rgba(var(--accent-cyan-rgb), 0.25)',
+    spotlight: 'rgba(var(--accent-cyan-rgb), 0.12)',
   };
 };
 
@@ -248,20 +248,7 @@ export const Skills = () => {
                 placeholder="Filter technologies (e.g. React, MongoDB, Git)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.65rem 2.4rem 0.65rem 2.6rem',
-                  fontSize: '0.88rem',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'rgba(14, 21, 38, 0.6)',
-                  color: 'var(--text-primary)',
-                  backdropFilter: 'blur(8px)',
-                  outline: 'none',
-                  transition: 'border-color var(--transition-fast)',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = 'var(--accent-cyan)')}
-                onBlur={(e) => (e.target.style.borderColor = 'var(--border-subtle)')}
+                className="skills-search-input"
               />
               {searchQuery && (
                 <button
@@ -309,34 +296,7 @@ export const Skills = () => {
                   key={catName}
                   type="button"
                   onClick={() => setActiveCategory(catName)}
-                  style={{
-                    padding: '0.45rem 1.05rem',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    borderRadius: 'var(--radius-full)',
-                    border: isActive
-                      ? '1px solid var(--accent-cyan)'
-                      : '1px solid var(--border-subtle)',
-                    background: isActive
-                      ? 'rgba(56, 189, 248, 0.15)'
-                      : 'rgba(255, 255, 255, 0.02)',
-                    color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    transition: 'all var(--transition-fast)',
-                    backdropFilter: 'blur(8px)',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = 'var(--border-hover)';
-                      e.currentTarget.style.color = 'var(--text-primary)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                      e.currentTarget.style.color = 'var(--text-secondary)';
-                    }
-                  }}
+                  className={`skills-filter-pill ${isActive ? 'active' : ''}`}
                 >
                   {catName}
                 </button>
@@ -353,9 +313,10 @@ export const Skills = () => {
             style={{
               textAlign: 'center',
               padding: '4rem 1rem',
-              background: 'rgba(14, 21, 38, 0.5)',
+              background: 'var(--gradient-surface)',
               borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-subtle)',
+              border: '1px solid var(--border-card)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             <div
@@ -363,7 +324,7 @@ export const Skills = () => {
                 width: '54px',
                 height: '54px',
                 borderRadius: 'var(--radius-full)',
-                background: 'rgba(56, 189, 248, 0.1)',
+                background: 'rgba(var(--accent-cyan-rgb), 0.12)',
                 color: 'var(--accent-cyan)',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -373,7 +334,7 @@ export const Skills = () => {
             >
               <Search size={24} />
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.4rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--text-primary)' }}>
               No technologies found
             </h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
@@ -407,16 +368,8 @@ export const Skills = () => {
               return (
                 <SpotlightCard
                   key={idx}
-                  className="hover-lift"
-                  spotlightColor={`rgba(${theme.accentRgb}, 0.12)`}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    padding: '1.5rem',
-                    borderRadius: 'var(--radius-xl)',
-                    background: 'linear-gradient(180deg, rgba(14, 21, 38, 0.8) 0%, rgba(10, 16, 28, 0.8) 100%)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
+                  className="skill-category-card hover-lift"
+                  spotlightColor={theme.spotlight}
                 >
                   {/* Category Header */}
                   <div
@@ -446,7 +399,7 @@ export const Skills = () => {
                       >
                         <IconComponent size={18} />
                       </div>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                         {category.title}
                       </h3>
                     </div>
@@ -456,9 +409,10 @@ export const Skills = () => {
                         fontFamily: 'var(--font-mono)',
                         padding: '0.2rem 0.55rem',
                         borderRadius: 'var(--radius-full)',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                        background: 'var(--bg-surface)',
                         border: '1px solid var(--border-subtle)',
                         color: 'var(--text-muted)',
+                        fontWeight: 500,
                       }}
                     >
                       {category.skills?.length || 0} items
@@ -477,26 +431,15 @@ export const Skills = () => {
                     {(category.skills || []).map((skill, sIdx) => (
                       <div
                         key={sIdx}
+                        className="skill-item-row"
                         style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: '0.65rem 0.85rem',
-                          borderRadius: 'var(--radius-md)',
-                          background: 'transparent',
-                          border: '1px solid transparent',
-                          borderLeft: `2px solid ${theme.border}`,
-                          transition: 'all var(--transition-fast)',
-                          cursor: 'default',
+                          borderLeft: `2.5px solid ${theme.border}`,
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
                           e.currentTarget.style.borderLeftColor = theme.accent;
-                          e.currentTarget.style.transform = 'translateX(3px)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
                           e.currentTarget.style.borderLeftColor = theme.border;
-                          e.currentTarget.style.transform = 'translateX(0)';
                         }}
                       >
                         {/* Title & Level Badge Row */}
@@ -523,6 +466,7 @@ export const Skills = () => {
                             style={{
                               fontFamily: 'var(--font-mono)',
                               fontSize: '0.7rem',
+                              fontWeight: 600,
                               color: theme.accent,
                               background: theme.bgGlow,
                               border: `1px solid ${theme.border}`,
@@ -536,7 +480,7 @@ export const Skills = () => {
                           </span>
                         </div>
 
-                        {/* Elegant Descriptor (Integrated, not in another box) */}
+                        {/* Elegant Descriptor */}
                         {skill.desc && (
                           <p
                             style={{

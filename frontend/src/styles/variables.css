@@ -45,9 +45,17 @@
   --accent-indigo: #6366f1;
   --accent-indigo-rgb: 99, 102, 241;
   --accent-violet: #a855f7;
+  --accent-violet-rgb: 168, 85, 247;
   --accent-emerald: #10b981;
+  --accent-emerald-rgb: 16, 185, 129;
   --accent-amber: #f59e0b;
+  --accent-amber-rgb: 245, 158, 11;
   --accent-rose: #f43f5e;
+  --accent-rose-rgb: 244, 63, 94;
+  --accent-teal: #14b8a6;
+  --accent-teal-rgb: 20, 184, 166;
+  --accent-pink: #ec4899;
+  --accent-pink-rgb: 236, 72, 153;
 
   /* Gradients */
   --gradient-accent: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
@@ -93,9 +101,17 @@
   --accent-indigo: #4f46e5;
   --accent-indigo-rgb: 79, 70, 229;
   --accent-violet: #7c3aed;
+  --accent-violet-rgb: 124, 58, 237;
   --accent-emerald: #059669;
+  --accent-emerald-rgb: 5, 150, 105;
   --accent-amber: #d97706;
+  --accent-amber-rgb: 217, 119, 6;
   --accent-rose: #e11d48;
+  --accent-rose-rgb: 225, 29, 72;
+  --accent-teal: #0d9488;
+  --accent-teal-rgb: 13, 148, 136;
+  --accent-pink: #db2777;
+  --accent-pink-rgb: 219, 39, 119;
 
   /* Gradients */
   --gradient-accent: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
