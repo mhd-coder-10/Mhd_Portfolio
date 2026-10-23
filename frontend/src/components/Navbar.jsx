@@ -17,7 +17,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { checkApiHealth } from '../services/api';
 import { usePortfolioData } from '../context/PortfolioContext';
 import { useToast } from '../admin/components/AdminToast';
 
@@ -38,7 +37,6 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
   const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [dbConnected, setDbConnected] = useState(false);
 
   const handleResumeDownload = async (e) => {
     e.preventDefault();
@@ -73,34 +71,6 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Poll DB health status
-  useEffect(() => {
-    let mounted = true;
-    const fetchHealth = () => {
-      checkApiHealth()
-        .then((res) => {
-          if (!mounted) return;
-          if (res?.database?.status === 'connected') {
-            setDbConnected(true);
-          } else {
-            setDbConnected(false);
-          }
-        })
-        .catch(() => {
-          if (mounted) setDbConnected(false);
-        });
-    };
-
-    fetchHealth();
-    const interval = setInterval(fetchHealth, 30000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-
 
   const handleNavClick = () => {
     setMobileMenuOpen(false);
@@ -218,37 +188,6 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
           }}
           className="desktop-actions"
         >
-          {/* Live Atlas DB Status Pill */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              padding: '0.35rem 0.75rem',
-              borderRadius: 'var(--radius-full)',
-              background: dbConnected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-              border: dbConnected ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)',
-              fontSize: '0.78rem',
-              fontFamily: 'var(--font-mono)',
-              color: dbConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-            title={dbConnected ? 'MongoDB Atlas Cluster Connected' : 'Checking Atlas Database...'}
-          >
-            <span
-              style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: dbConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)',
-                boxShadow: dbConnected ? '0 0 8px var(--accent-emerald)' : 'none',
-                flexShrink: 0,
-              }}
-            />
-            <span>{dbConnected ? 'Atlas Live' : 'Atlas Standby'}</span>
-          </div>
-
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
           <a

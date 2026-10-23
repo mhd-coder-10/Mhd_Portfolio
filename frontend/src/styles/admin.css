@@ -1363,9 +1363,6 @@ svg.admin-spinner {
     grid-template-columns: 1fr !important;
     gap: 0.65rem !important;
   }
-  .admin-topbar-atlas-text {
-    display: none !important;
-  }
   .admin-view-portfolio-text {
     display: none !important;
   }

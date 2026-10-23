@@ -19,14 +19,12 @@ import {
   ExternalLink,
   Menu,
   X,
-  Database,
   ChevronRight,
   Pin,
   PinOff,
   RotateCw,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { checkApiHealth } from '../../services/api';
 import '../../styles/admin.css';
 
 const navGroups = [
@@ -71,7 +69,6 @@ export const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dbConnected, setDbConnected] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isPinned, setIsPinned] = useState(() => {
     try {
@@ -117,19 +114,6 @@ export const AdminLayout = () => {
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
-
-  // Check DB status
-  useEffect(() => {
-    let mounted = true;
-    checkApiHealth().then((res) => {
-      if (mounted && res?.database?.status === 'connected') {
-        setDbConnected(true);
-      }
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   // Mobile Pull-to-Refresh Gesture Listener
   const [pullY, setPullY] = useState(0);
@@ -364,26 +348,6 @@ export const AdminLayout = () => {
           </div>
 
           <div className="admin-topbar-right">
-            {/* Database indicator */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.3rem 0.75rem',
-                borderRadius: 'var(--radius-full)',
-                background: dbConnected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                border: dbConnected ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)',
-                fontSize: '0.78rem',
-                fontFamily: 'var(--font-mono)',
-                color: dbConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)',
-              }}
-              title="MongoDB Atlas connection status"
-            >
-              <Database size={13} />
-              <span className="admin-topbar-atlas-text">{dbConnected ? 'Atlas Live' : 'Atlas Standby'}</span>
-            </div>
-
             {/* Dedicated Page Refresh Button (Desktop & Mobile) */}
             <button
               type="button"
