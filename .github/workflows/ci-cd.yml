@@ -1,0 +1,132 @@
+name: CI/CD Pipeline - Portfolio (Backend & Frontend)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =========================================================================
+  # 1. BACKEND CI (Syntax, Dependencies, Integrity Verification)
+  # =========================================================================
+  backend-ci:
+    name: Backend CI (Node.js & Syntax Check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: 🔍 Verify Backend Syntax & Startup Scripts
+        working-directory: ./backend
+        run: |
+          node --check src/server.js
+          node --check src/app.js
+          echo "✅ Backend syntax check passed successfully!"
+
+  # =========================================================================
+  # 2. FRONTEND CI (Build Verification & Asset Validation)
+  # =========================================================================
+  frontend-ci:
+    name: Frontend CI (Vite Production Build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: 🏗️ Build Production Bundle
+        working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: https://api.momin-portfolio.placeholder
+        run: npm run build
+
+      - name: 🛡️ Verify Build Output Artifacts
+        working-directory: ./frontend
+        run: |
+          if [ -f "dist/index.html" ]; then
+            echo "✅ Frontend production build validated successfully! (dist/index.html exists)"
+          else
+            echo "❌ dist/index.html not found! Build failed."
+            exit 1
+          fi
+
+  # =========================================================================
+  # 3. DEPLOY BACKEND TO RENDER
+  # =========================================================================
+  deploy-backend:
+    name: Deploy Backend (Render)
+    needs: [backend-ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 Trigger Render Deploy Hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "Triggering Render deployment via Webhook..."
+            response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+            http_code=$(echo "$response" | tail -n1)
+            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+              echo "✅ Render deployment successfully triggered! (HTTP $http_code)"
+            else
+              echo "⚠️ Render webhook returned HTTP $http_code. Check Render logs."
+            fi
+          else
+            echo "ℹ️ RENDER_DEPLOY_HOOK_URL secret not configured in GitHub Secrets."
+            echo "✅ If you connected your GitHub repo directly to Render, Render's native Git Auto-Deploy triggers automatically upon git push to 'main'!"
+          fi
+
+  # =========================================================================
+  # 4. DEPLOY FRONTEND TO VERCEL
+  # =========================================================================
+  deploy-frontend:
+    name: Deploy Frontend (Vercel)
+    needs: [frontend-ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to Vercel
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "Deploying to Vercel via Vercel CLI..."
+            npx --yes vercel --token "${{ secrets.VERCEL_TOKEN }}" --prod --yes ./frontend
+            echo "✅ Vercel production deployment completed!"
+          else
+            echo "ℹ️ VERCEL_TOKEN secret not configured in GitHub Secrets."
+            echo "✅ If you imported your repository into Vercel, Vercel's native Git Integration automatically detects this push to 'main' and deploys the frontend!"
+          fi
