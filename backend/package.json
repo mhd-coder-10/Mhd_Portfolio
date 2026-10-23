@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node --watch-path=src src/server.js",
     "dev": "node --watch-path=src src/server.js",
     "reset-admin": "node src/utils/resetAdmin.js"
   },

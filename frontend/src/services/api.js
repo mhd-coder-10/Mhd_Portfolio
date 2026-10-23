@@ -312,6 +312,37 @@ export const adminReorderProjects = async (token, orders) => {
   return handleResponse(response);
 };
 
+export const adminGetProjectCategories = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/categories`);
+  return handleResponse(response);
+};
+
+export const adminCreateProjectCategory = async (token, data) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/categories`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const adminUpdateProjectCategory = async (token, id, data) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/categories/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const adminDeleteProjectCategory = async (token, id) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/projects/categories/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  return handleResponse(response);
+};
+
 /* ==========================================================================
    EDUCATION & LANGUAGES
    ========================================================================== */

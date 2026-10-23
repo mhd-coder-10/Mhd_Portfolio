@@ -2,6 +2,7 @@ const Profile = require('../models/profile.model');
 const Experience = require('../models/experience.model');
 const Skill = require('../models/skill.model');
 const Project = require('../models/project.model');
+const ProjectCategory = require('../models/projectCategory.model');
 const { Education, Language } = require('../models/education.model');
 const Certification = require('../models/certification.model');
 const SocialLink = require('../models/socialLink.model');
@@ -20,6 +21,7 @@ const getPublicPortfolio = async (req, res, next) => {
       experiences,
       rawSkills,
       projects,
+      projectCategories,
       education,
       languages,
       certifications,
@@ -31,6 +33,7 @@ const getPublicPortfolio = async (req, res, next) => {
       Experience.find({ isActive: true }).sort({ displayOrder: 1, createdAt: -1 }),
       Skill.find({ isActive: true }).sort({ categoryOrder: 1, displayOrder: 1 }),
       Project.find({ isActive: true }).sort({ displayOrder: 1, createdAt: -1 }),
+      ProjectCategory.find({ isActive: true }).sort({ displayOrder: 1, createdAt: 1 }),
       Education.find({ isActive: true }).sort({ displayOrder: 1 }),
       Language.find().sort({ displayOrder: 1 }),
       Certification.find({ isActive: true }).sort({ displayOrder: 1, createdAt: -1 }),
@@ -65,6 +68,7 @@ const getPublicPortfolio = async (req, res, next) => {
         skills: rawSkills,
         skillCategories,
         projects,
+        projectCategories,
         education,
         certification: certifications[0] || null,
         certifications,

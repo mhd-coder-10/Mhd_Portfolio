@@ -6,7 +6,7 @@ import useScrollReveal from '../hooks/useScrollReveal';
 import { usePortfolioData } from '../context/PortfolioContext';
 
 export const Projects = ({ onSelectProject }) => {
-  const { projects } = usePortfolioData();
+  const { projects, projectCategories } = usePortfolioData();
   const [activeCategory, setActiveCategory] = useState('All');
   const [headerRef, headerVisible] = useScrollReveal({ threshold: 0.1 });
   const [expandedProjects, setExpandedProjects] = useState({});
@@ -19,14 +19,22 @@ export const Projects = ({ onSelectProject }) => {
   };
 
   const categories = useMemo(() => {
-    const set = new Set(['All']);
+    const list = ['All'];
+    if (Array.isArray(projectCategories) && projectCategories.length > 0) {
+      projectCategories.forEach((cat) => {
+        if (cat.name && !list.includes(cat.name)) {
+          list.push(cat.name);
+        }
+      });
+    }
+    // Also include any categories present in active projects
     (projects || []).forEach((p) => {
-      if (p.category && p.category.trim()) {
-        set.add(p.category.trim());
+      if (p.category && p.category.trim() && !list.includes(p.category.trim())) {
+        list.push(p.category.trim());
       }
     });
-    return Array.from(set);
-  }, [projects]);
+    return list;
+  }, [projects, projectCategories]);
 
   const filteredProjects = useMemo(() => {
     return (projects || []).filter((project) => {

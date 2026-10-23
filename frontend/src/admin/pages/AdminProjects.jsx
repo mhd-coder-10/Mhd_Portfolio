@@ -15,6 +15,9 @@ import {
   Save,
   Layers,
   Sparkles,
+  ListFilter,
+  FolderKanban,
+  Tag,
 } from 'lucide-react';
 import { GithubIcon } from '../../components/SocialIcons';
 import { useAdminAuth } from '../../context/AdminAuthContext';
@@ -23,6 +26,10 @@ import {
   adminCreateProject,
   adminUpdateProject,
   adminDeleteProject,
+  adminGetProjectCategories,
+  adminCreateProjectCategory,
+  adminUpdateProjectCategory,
+  adminDeleteProjectCategory,
 } from '../../services/api';
 import { useToast } from '../components/AdminToast';
 import { usePortfolioData } from '../../context/PortfolioContext';
@@ -30,14 +37,6 @@ import ConfirmModal from '../components/ConfirmModal';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
 import { ImageUploader } from '../components/ImageUploader';
-
-const categoryOptions = [
-  'Real-Time & AI Platform',
-  'Full-Stack & AI',
-  'MERN Stack',
-  'Backend & APIs',
-  'Frontend Application',
-];
 
 const initialProjectState = {
   name: '',
@@ -65,16 +64,39 @@ export const AdminProjects = () => {
   const { showToast } = useToast();
   const { refreshPortfolio } = usePortfolioData();
 
+  // Tab state: 'projects' or 'categories'
+  const [activeTab, setActiveTab] = useState('projects');
+
+  // Projects state
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Modal state
+  // Project Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(initialProjectState);
   const [saving, setSaving] = useState(false);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+
+  // Project Categories state
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: '',
+    description: '',
+    displayOrder: 0,
+  });
+  const [savingCategory, setSavingCategory] = useState(false);
+
+  // Category Delete Modal state
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [deletingCategory, setDeletingCategory] = useState(false);
 
   // Dynamic input helpers
   const [techInput, setTechInput] = useState('');
@@ -99,16 +121,122 @@ export const AdminProjects = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await adminGetProjectCategories();
+      if (res.success && Array.isArray(res.data)) {
+        setCategories(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load project categories:', err);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
+    fetchCategories();
   }, []);
+
+  const handleOpenCreateCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormData({
+      name: '',
+      description: '',
+      displayOrder: categories.length + 1,
+    });
+    setCategoryModalOpen(true);
+  };
+
+  const handleOpenEditCategory = (cat) => {
+    setEditingCategory(cat);
+    setCategoryFormData({
+      name: cat.name || '',
+      description: cat.description || '',
+      displayOrder: cat.displayOrder || 0,
+    });
+    setCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
+    const trimmed = categoryFormData.name.trim();
+    if (!trimmed) {
+      showToast('Category name is required.', 'error');
+      return;
+    }
+
+    setSavingCategory(true);
+    try {
+      if (editingCategory) {
+        const res = await adminUpdateProjectCategory(token, editingCategory._id, {
+          name: trimmed,
+          description: categoryFormData.description,
+          displayOrder: categoryFormData.displayOrder,
+        });
+        if (res.success) {
+          showToast(`Category "${trimmed}" updated successfully!`, 'success');
+          setCategoryModalOpen(false);
+          fetchCategories();
+          fetchProjects();
+          refreshPortfolio();
+        }
+      } else {
+        const res = await adminCreateProjectCategory(token, {
+          name: trimmed,
+          description: categoryFormData.description,
+          displayOrder: categoryFormData.displayOrder,
+        });
+        if (res.success) {
+          showToast(`Category "${trimmed}" created successfully!`, 'success');
+          setCategoryModalOpen(false);
+          fetchCategories();
+          refreshPortfolio();
+        }
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to save category.', 'error');
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleOpenDeleteCategory = (cat) => {
+    setCategoryToDelete(cat);
+    setDeleteCategoryModalOpen(true);
+  };
+
+  const handleConfirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    setDeletingCategory(true);
+    try {
+      const res = await adminDeleteProjectCategory(token, categoryToDelete._id);
+      if (res.success) {
+        showToast(res.message || 'Category deleted successfully.', 'success');
+        setDeleteCategoryModalOpen(false);
+        setCategoryToDelete(null);
+        fetchCategories();
+        fetchProjects();
+        refreshPortfolio();
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete category.', 'error');
+    } finally {
+      setDeletingCategory(false);
+    }
+  };
 
   const handleOpenCreate = () => {
     setEditingId(null);
+    const defaultCat = categories.length > 0 ? categories[0].name : 'MERN Stack';
     setFormData({
       ...initialProjectState,
+      category: defaultCat,
       displayOrder: projects.length,
     });
+    setIsCustomCategory(false);
+    setCustomCategoryInput('');
     setTechInput('');
     setFeatureInput('');
     setModalOpen(true);
@@ -116,12 +244,15 @@ export const AdminProjects = () => {
 
   const handleOpenEdit = (project) => {
     setEditingId(project._id);
+    const catExists = categories.some((c) => c.name === project.category);
+    setIsCustomCategory(!catExists && Boolean(project.category));
+    setCustomCategoryInput(!catExists && Boolean(project.category) ? project.category : '');
     setFormData({
       name: project.name || '',
       badge: project.badge || '',
       tagline: project.tagline || '',
       overview: project.overview || '',
-      category: project.category || 'MERN Stack',
+      category: project.category || (categories[0]?.name || 'MERN Stack'),
       status: project.status || 'Production System',
       technologies: Array.isArray(project.technologies) ? [...project.technologies] : [],
       features: Array.isArray(project.features) ? [...project.features] : [],
@@ -267,75 +398,166 @@ export const AdminProjects = () => {
       <div className="admin-page-header">
         <div className="admin-page-header-title">
           <div className="admin-page-icon">
-            <FolderGit2 size={24} />
+            {activeTab === 'categories' ? <Layers size={24} /> : <FolderGit2 size={24} />}
           </div>
           <div>
-            <h1>Projects & Case Studies</h1>
-            <p>Manage production portfolio projects, tech stacks, live links, and features</p>
+            <h1>{activeTab === 'categories' ? 'Project Categories' : 'Projects & Case Studies'}</h1>
+            <p>
+              {activeTab === 'categories'
+                ? 'Create, edit, and organize project taxonomy categories for portfolio showcase'
+                : 'Manage production portfolio projects, tech stacks, live links, and features'}
+            </p>
           </div>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenCreate}>
-          <Plus size={16} />
-          <span>Add New Project</span>
+        {activeTab === 'categories' ? (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenCreateCategory}>
+            <Plus size={16} />
+            <span>Add New Category</span>
+          </button>
+        ) : (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenCreate}>
+            <Plus size={16} />
+            <span>Add New Project</span>
+          </button>
+        )}
+      </div>
+
+      {/* Tabs Navigation */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          borderBottom: '1px solid var(--border-subtle)',
+          marginBottom: '1.75rem',
+          paddingBottom: '0.2rem',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setActiveTab('projects')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.65rem 1.25rem',
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'projects' ? '2px solid var(--accent-cyan)' : '2px solid transparent',
+            color: activeTab === 'projects' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
+          }}
+        >
+          <FolderGit2 size={17} />
+          <span>Projects List</span>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              padding: '0.15rem 0.5rem',
+              borderRadius: 'var(--radius-full)',
+              background: activeTab === 'projects' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+            }}
+          >
+            {projects.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('categories')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.65rem 1.25rem',
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'categories' ? '2px solid var(--accent-cyan)' : '2px solid transparent',
+            color: activeTab === 'categories' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
+          }}
+        >
+          <Layers size={17} />
+          <span>Manage Categories</span>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              padding: '0.15rem 0.5rem',
+              borderRadius: 'var(--radius-full)',
+              background: activeTab === 'categories' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+            }}
+          >
+            {categories.length}
+          </span>
         </button>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div
-        className="admin-card"
-        style={{
-          padding: '1rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <Filter size={16} style={{ color: 'var(--text-muted)', marginRight: '0.25rem' }} />
-          <button
-            className={`admin-btn admin-btn-sm ${selectedCategory === 'All' ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
-            onClick={() => setSelectedCategory('All')}
-          >
-            All ({projects.length})
-          </button>
-          {categoryOptions.map((cat) => {
-            const count = projects.filter((p) => p.category === cat).length;
-            return (
-              <button
-                key={cat}
-                className={`admin-btn admin-btn-sm ${selectedCategory === cat ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat} ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '320px' }}>
-          <Search
-            size={16}
+      {/* TAB 1: PROJECTS LIST */}
+      {activeTab === 'projects' && (
+        <>
+          {/* Filter & Search Bar */}
+          <div
+            className="admin-card"
             style={{
-              position: 'absolute',
-              left: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
-          />
-          <input
-            type="text"
-            className="admin-input"
-            placeholder="Search projects or tech..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: '2.2rem' }}
-          />
-        </div>
-      </div>
+          >
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <Filter size={16} style={{ color: 'var(--text-muted)', marginRight: '0.25rem' }} />
+              <button
+                className={`admin-btn admin-btn-sm ${selectedCategory === 'All' ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+                onClick={() => setSelectedCategory('All')}
+              >
+                All ({projects.length})
+              </button>
+              {categories.map((cat) => {
+                const count = projects.filter((p) => p.category === cat.name).length;
+                return (
+                  <button
+                    key={cat._id || cat.name}
+                    className={`admin-btn admin-btn-sm ${selectedCategory === cat.name ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+                    onClick={() => setSelectedCategory(cat.name)}
+                  >
+                    {cat.name} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '320px' }}>
+              <Search
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="Search projects or tech..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingLeft: '2.2rem' }}
+              />
+            </div>
+          </div>
 
       {/* Projects Grid / Content */}
       {loading ? (
@@ -644,6 +866,135 @@ export const AdminProjects = () => {
           ))}
         </div>
       )}
+        </>
+      )}
+
+      {/* TAB 2: MANAGE CATEGORIES */}
+      {activeTab === 'categories' && (
+        <div>
+          {categoriesLoading ? (
+            <LoadingSkeleton count={3} height="120px" />
+          ) : categories.length === 0 ? (
+            <EmptyState
+              icon={Layers}
+              title="No Categories Available"
+              description="Create your first project category to organize your projects on the portfolio."
+              actionLabel="Add New Category"
+              onAction={handleOpenCreateCategory}
+            />
+          ) : (
+            <div className="admin-responsive-cards-grid">
+              {categories.map((cat) => (
+                <div
+                  key={cat._id || cat.name}
+                  className="admin-card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <div
+                          style={{
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'rgba(56, 189, 248, 0.1)',
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--accent-cyan)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Layers size={20} />
+                        </div>
+                        <div>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                            {cat.name}
+                          </h3>
+                          {cat.description && (
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
+                              {cat.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <span
+                        className="admin-badge admin-badge-info"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                      >
+                        {cat.projectCount || 0} {cat.projectCount === 1 ? 'Project' : 'Projects'}
+                      </span>
+                    </div>
+
+                    {cat.projectNames && cat.projectNames.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.75rem' }}>
+                        {cat.projectNames.map((pName, pIdx) => (
+                          <span
+                            key={pIdx}
+                            style={{
+                              fontSize: '0.72rem',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: 'var(--radius-sm)',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid var(--border-subtle)',
+                              color: 'var(--text-secondary)',
+                            }}
+                          >
+                            {pName}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontStyle: 'italic' }}>
+                        No projects currently assigned to this category.
+                      </p>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      gap: '0.5rem',
+                      borderTop: '1px solid var(--border-subtle)',
+                      paddingTop: '0.85rem',
+                      marginTop: '1.25rem',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-secondary admin-btn-sm"
+                      onClick={() => handleOpenEditCategory(cat)}
+                      title="Edit Category Name"
+                    >
+                      <Edit2 size={13} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-danger admin-btn-sm"
+                      onClick={() => handleOpenDeleteCategory(cat)}
+                      title="Delete Category"
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* CREATE / EDIT PROJECT MODAL */}
       {modalOpen && (
@@ -711,18 +1062,60 @@ export const AdminProjects = () => {
 
               <div className="admin-grid-2">
                 <div className="admin-form-group">
-                  <label className="admin-label">Category</label>
-                  <select
-                    className="admin-input"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    {categoryOptions.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <label className="admin-label" style={{ margin: 0 }}>Category <span style={{ color: 'var(--accent-rose)' }}>*</span></label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategory(!isCustomCategory);
+                        setCustomCategoryInput('');
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-cyan)',
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {isCustomCategory ? 'Choose from list' : '+ Custom'}
+                    </button>
+                  </div>
+
+                  {isCustomCategory ? (
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Type custom category name..."
+                      value={customCategoryInput}
+                      onChange={(e) => {
+                        setCustomCategoryInput(e.target.value);
+                        setFormData({ ...formData, category: e.target.value });
+                      }}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="admin-input"
+                      value={formData.category}
+                      onChange={(e) => {
+                        if (e.target.value === '__NEW__') {
+                          setIsCustomCategory(true);
+                          setCustomCategoryInput('');
+                        } else {
+                          setFormData({ ...formData, category: e.target.value });
+                        }
+                      }}
+                    >
+                      {categories.map((c) => (
+                        <option key={c._id || c.name} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                      <option value="__NEW__">+ Add Custom Category...</option>
+                    </select>
+                  )}
                 </div>
 
                 <div className="admin-form-group">
@@ -987,6 +1380,108 @@ export const AdminProjects = () => {
         onCancel={() => {
           setDeleteModalOpen(false);
           setProjectToDelete(null);
+        }}
+      />
+
+      {/* =========================================================================
+          CATEGORY MODAL (ADD / EDIT PROJECT CATEGORY)
+         ========================================================================= */}
+      {categoryModalOpen && (
+        <div className="admin-modal-overlay" onClick={() => !savingCategory && setCategoryModalOpen(false)}>
+          <div
+            className="admin-modal"
+            style={{ maxWidth: '520px', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={18} style={{ color: 'var(--accent-cyan)' }} />
+                <h3>{editingCategory ? `Edit Category: ${editingCategory.name}` : 'Add New Project Category'}</h3>
+              </div>
+              <button
+                className="admin-modal-close"
+                onClick={() => setCategoryModalOpen(false)}
+                disabled={savingCategory}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} style={{ padding: '1.25rem', overflowY: 'auto' }}>
+              <div className="admin-form-group">
+                <label className="admin-label">
+                  Category Name <span style={{ color: 'var(--accent-rose)' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="admin-input"
+                  placeholder="e.g. AI Platforms, Full-Stack & Cloud, Mobile Apps"
+                  value={categoryFormData.name}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-label">Description (Optional)</label>
+                <textarea
+                  className="admin-textarea"
+                  rows={2}
+                  placeholder="Brief description of this project classification..."
+                  value={categoryFormData.description}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-label">Display Order</label>
+                <input
+                  type="number"
+                  className="admin-input"
+                  value={categoryFormData.displayOrder}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, displayOrder: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-secondary"
+                  onClick={() => setCategoryModalOpen(false)}
+                  disabled={savingCategory}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={savingCategory}>
+                  {savingCategory ? (
+                    <>
+                      <Loader2 size={16} className="admin-spinner" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      <span>{editingCategory ? 'Save Changes' : 'Create Category'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CATEGORY DELETE CONFIRM MODAL */}
+      <ConfirmModal
+        isOpen={deleteCategoryModalOpen}
+        title="Delete Project Category"
+        message={`Are you sure you want to delete category "${categoryToDelete?.name}"? Linked projects will be safely reassigned to remaining categories.`}
+        confirmText={deletingCategory ? 'Deleting...' : 'Delete Category'}
+        type="danger"
+        onConfirm={handleConfirmDeleteCategory}
+        onCancel={() => {
+          setDeleteCategoryModalOpen(false);
+          setCategoryToDelete(null);
         }}
       />
     </div>

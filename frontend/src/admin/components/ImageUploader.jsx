@@ -3,7 +3,6 @@ import { UploadCloud, Image as ImageIcon, X, Loader2, Link, FileText, ExternalLi
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { adminUploadImage, adminDeleteUploadedFile } from '../../services/api';
 import { useToast } from './AdminToast';
-
 /**
  * Fast client-side image downscaling/compression helper.
  * Reduces 5-15MB mobile camera images to ~250-400KB in 40ms.
@@ -220,117 +219,76 @@ export const ImageUploader = ({
           </button>
         </div>
       ) : value ? (
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-hover)',
-            overflow: 'hidden',
-            backgroundColor: 'var(--bg-surface)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0.75rem 1rem',
-            gap: '0.75rem',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', overflow: 'hidden', minWidth: 0, flex: 1 }}>
-            {isPdf ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          {/* Active Attached File Card (Same robust style as Resume Module) */}
+          <div className="resume-file-box" style={{ margin: 0, width: '100%' }}>
+            <div
+              className="resume-file-info-group"
+              onClick={() => window.open(value, '_blank', 'noopener,noreferrer')}
+              title="Click or tap to preview file in browser"
+            >
               <div
-                style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  color: '#ef4444',
-                }}
+                className="resume-file-icon"
+                style={!isPdf ? { background: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.28)', color: 'var(--accent-cyan)' } : {}}
               >
-                <FileText size={26} />
+                {isPdf ? (
+                  <FileText size={22} />
+                ) : (
+                  <img
+                    src={value}
+                    alt="Uploaded preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                )}
               </div>
-            ) : (
-              <img
-                src={value}
-                alt="Uploaded preview"
-                style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: 'var(--radius-sm)',
-                  objectFit: 'cover',
-                  border: '1px solid var(--border-subtle)',
-                  flexShrink: 0,
-                }}
-                onError={(e) => {
-                  e.target.src = '/assets/profile-momin.jpg';
-                }}
-              />
-            )}
-            <div style={{ overflow: 'hidden', minWidth: 0 }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {value.split('/').pop()}
-              </div>
-              <div style={{ fontSize: '0.74rem', color: isPdf ? '#ef4444' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={12} />
-                <span>{isPdf ? 'PDF Attached on Cloudinary' : 'Image Stored on Cloudinary'}</span>
+              <div className="resume-file-meta">
+                <div className="resume-file-name">
+                  <span>{value.split('/').pop()}</span>
+                  <ExternalLink size={13} style={{ opacity: 0.65, flexShrink: 0 }} />
+                </div>
+                <div className="resume-file-subtext">
+                  <span style={{ color: isPdf ? '#ef4444' : 'var(--accent-emerald)', fontWeight: 600 }}>
+                    {isPdf ? 'PDF on Cloudinary' : 'Image on Cloudinary'}
+                  </span>
+                  <span>•</span>
+                  <span style={{ color: 'var(--accent-cyan)' }}>Tap to preview</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-            {/* View Button */}
-            <a
-              href={value}
-              target="_blank"
-              rel="noreferrer"
-              className="admin-btn admin-btn-secondary admin-btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}
-              title="Open file in new tab"
-            >
-              <ExternalLink size={13} />
-              <span>View</span>
-            </a>
-
-            {/* Change / Replace File Button */}
-            <button
-              type="button"
-              disabled={uploading}
-              className="admin-btn admin-btn-secondary admin-btn-sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem' }}
-              title="Upload a new file to replace this one"
-            >
-              {uploading ? (
-                <Loader2 size={13} className="spin-animation" />
-              ) : (
-                <RefreshCw size={13} />
-              )}
-              <span>{uploading ? 'Replacing...' : 'Change'}</span>
-            </button>
-
-            {/* Remove File Button */}
+            {/* Clean, dedicated X Delete Button (Never cut off on mobile) */}
             <button
               type="button"
               disabled={uploading || removing}
-              className="admin-btn admin-btn-danger admin-btn-sm"
+              className="resume-delete-btn"
               onClick={handleRemove}
-              title="Remove File"
+              title="Remove file"
             >
               {removing ? (
-                <Loader2 size={14} className="spin-animation" />
+                <Loader2 size={16} className="spin-animation" />
               ) : (
-                <X size={14} />
+                <X size={18} />
               )}
-              <span>{removing ? 'Removing...' : 'Remove'}</span>
             </button>
+          </div>
+
+          {/* Quick Replace option below */}
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!uploading && !removing) fileInputRef.current?.click();
+            }}
+            className="resume-upload-dropzone"
+            style={{ padding: '0.85rem 1rem', cursor: uploading ? 'wait' : 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+              <RefreshCw size={14} className={uploading ? 'spin-animation' : ''} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
+              <span>{uploading ? 'Uploading replacement...' : 'Tap here to replace with a new file'}</span>
+            </div>
           </div>
         </div>
       ) : (
@@ -340,28 +298,40 @@ export const ImageUploader = ({
             e.stopPropagation();
             if (!uploading) fileInputRef.current?.click();
           }}
-          style={{
-            border: '2px dashed var(--border-hover)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.5rem',
-            textAlign: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.01)',
-            cursor: uploading ? 'wait' : 'pointer',
-            transition: 'all var(--transition-fast)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.04)')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.01)')}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className="resume-upload-dropzone"
+          style={{ cursor: uploading ? 'wait' : 'pointer' }}
         >
           {uploading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', color: 'var(--accent-cyan)' }}>
               <Loader2 size={24} className="spin-animation" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Uploading...</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Uploading to Cloudinary...</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-              <UploadCloud size={30} color="var(--accent-cyan)" />
-              <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>Click or Tap to Upload</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{hint}</div>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-cyan)',
+                }}
+              >
+                <UploadCloud size={24} />
+              </div>
+              <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Click or Tap to Upload
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                {hint || 'Accepts images or PDF documents up to 10MB.'}
+              </div>
             </div>
           )}
         </div>

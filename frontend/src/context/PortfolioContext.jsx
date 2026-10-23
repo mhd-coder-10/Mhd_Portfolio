@@ -20,6 +20,7 @@ export const PortfolioProvider = ({ children }) => {
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [skillCategories, setSkillCategories] = useState(defaultSkillCategories);
   const [projects, setProjects] = useState(defaultProjects);
+  const [projectCategories, setProjectCategories] = useState([]);
   const [educationData, setEducationData] = useState(defaultEducationData);
   const [languages, setLanguages] = useState(defaultLanguages);
   const [certificationData, setCertificationData] = useState(defaultCertificationData);
@@ -58,9 +59,12 @@ export const PortfolioProvider = ({ children }) => {
           setSkillCategories(d.skillCategories);
         }
 
-        // 4. Projects
+        // 4. Projects & Categories
         if (Array.isArray(d.projects)) {
           setProjects(d.projects);
+        }
+        if (Array.isArray(d.projectCategories)) {
+          setProjectCategories(d.projectCategories);
         }
 
         // 5. Education & Languages
@@ -167,6 +171,7 @@ export const PortfolioProvider = ({ children }) => {
         experiences,
         skillCategories,
         projects,
+        projectCategories,
         educationData,
         languages,
         certificationData,
