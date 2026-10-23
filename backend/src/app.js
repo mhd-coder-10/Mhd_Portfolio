@@ -73,7 +73,7 @@ app.use(
 // API Routes
 app.use('/api', apiRoutes);
 
-// Root greeting endpoint
+// Root health endpoint
 app.get('/', (req, res) => {
   res.json({
     name: 'Momin Mahmmadbhai Portfolio API',
