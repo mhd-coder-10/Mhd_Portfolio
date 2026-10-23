@@ -87,6 +87,7 @@ export const ImageUploader = ({
   const [uploadStatus, setUploadStatus] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const isPdf = typeof value === 'string' && (value.toLowerCase().endsWith('.pdf') || value.toLowerCase().includes('.pdf'));
@@ -99,8 +100,7 @@ export const ImageUploader = ({
     }
   };
 
-  const handleFileChange = async (e) => {
-    const rawFile = e.target.files?.[0];
+  const processSelectedFile = async (rawFile) => {
     if (!rawFile) return;
 
     if (rawFile.size > 15 * 1024 * 1024) {
@@ -135,6 +135,38 @@ export const ImageUploader = ({
     } finally {
       setUploadState(false, '');
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      processSelectedFile(rawFile);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!uploading && !removing) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (uploading || removing) return;
+    const droppedFile = e.dataTransfer?.files?.[0];
+    if (droppedFile) {
+      processSelectedFile(droppedFile);
     }
   };
 
@@ -282,12 +314,20 @@ export const ImageUploader = ({
               e.stopPropagation();
               if (!uploading && !removing) fileInputRef.current?.click();
             }}
-            className="resume-upload-dropzone"
-            style={{ padding: '0.85rem 1rem', cursor: uploading ? 'wait' : 'pointer' }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`resume-upload-dropzone ${isDragging ? 'dragging' : ''}`}
+            style={{
+              padding: '0.85rem 1rem',
+              cursor: uploading ? 'wait' : 'pointer',
+              borderColor: isDragging ? 'var(--accent-cyan)' : undefined,
+              backgroundColor: isDragging ? 'rgba(56, 189, 248, 0.08)' : undefined,
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
               <RefreshCw size={14} className={uploading ? 'spin-animation' : ''} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
-              <span>{uploading ? 'Uploading replacement...' : 'Tap here to replace with a new file'}</span>
+              <span>{uploading ? 'Uploading replacement...' : isDragging ? 'Drop file to replace' : 'Tap or drop here to replace with a new file'}</span>
             </div>
           </div>
         </div>
@@ -301,8 +341,12 @@ export const ImageUploader = ({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className="resume-upload-dropzone"
-          style={{ cursor: uploading ? 'wait' : 'pointer' }}
+          className={`resume-upload-dropzone ${isDragging ? 'dragging' : ''}`}
+          style={{
+            cursor: uploading ? 'wait' : 'pointer',
+            borderColor: isDragging ? 'var(--accent-cyan)' : undefined,
+            backgroundColor: isDragging ? 'rgba(56, 189, 248, 0.08)' : undefined,
+          }}
         >
           {uploading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', color: 'var(--accent-cyan)' }}>
