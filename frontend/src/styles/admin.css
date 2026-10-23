@@ -1530,6 +1530,9 @@ svg.admin-spinner {
   .resume-upload-dropzone {
     padding: 1.5rem 1rem !important;
   }
+  .hide-on-mobile {
+    display: none !important;
+  }
 }
 
 
