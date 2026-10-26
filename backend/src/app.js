@@ -17,19 +17,28 @@ app.use(
 );
 
 // CORS configuration
-const allowedOrigins = [
-  env.CLIENT_URL,
+const configuredOrigins = (env.CLIENT_URL || '')
+  .split(',')
+  .map((url) => url.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+const defaultLocalOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
 ];
 
+const allowedOrigins = [...configuredOrigins, ...defaultLocalOrigins];
+
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
-  if (allowedOrigins.includes(origin)) return true;
+  const cleanOrigin = origin.replace(/\/+$/, '');
+  if (allowedOrigins.includes(cleanOrigin)) return true;
+  // Automatically allow any Vercel deployment (*.vercel.app)
+  if (/^https:\/\/[a-zA-Z0-9_.-]+\.vercel\.app$/.test(cleanOrigin)) return true;
   if (env.NODE_ENV !== 'production') return true;
-  if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+  if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
   return false;
