@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Menu,
   X,
@@ -15,6 +16,7 @@ import {
   Mail,
   Sparkles,
   ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { usePortfolioData } from '../context/PortfolioContext';
@@ -188,6 +190,39 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
           }}
           className="desktop-actions"
         >
+          {/* Admin Panel Quick Access (to the left of ThemeToggle) */}
+          <Link
+            to="/admin"
+            title="Admin Panel"
+            aria-label="Admin Panel"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              transition: 'all var(--transition-normal)',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+              e.currentTarget.style.color = 'var(--accent-cyan)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <ShieldCheck size={18} />
+          </Link>
+
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
           <a
@@ -213,6 +248,37 @@ export const Navbar = ({ theme, toggleTheme, activeSection }) => {
 
         {/* Mobile Hamburger & Theme Switcher */}
         <div className="mobile-toggle-group">
+          {/* Admin Panel Quick Access on Mobile (left of ThemeToggle) */}
+          <Link
+            to="/admin"
+            title="Admin Panel"
+            aria-label="Admin Panel"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              transition: 'all var(--transition-normal)',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+              e.currentTarget.style.color = 'var(--accent-cyan)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+          >
+            <ShieldCheck size={18} />
+          </Link>
+
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
           <button
