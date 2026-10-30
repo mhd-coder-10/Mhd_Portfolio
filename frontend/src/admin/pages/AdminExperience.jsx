@@ -73,6 +73,16 @@ export const AdminExperience = () => {
 
   useEffect(() => {
     fetchExperiences();
+
+    // Listen to admin topbar refresh event for seamless in-place data update
+    const handleRefresh = () => {
+      fetchExperiences();
+    };
+    window.addEventListener('admin:refresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('admin:refresh', handleRefresh);
+    };
   }, []);
 
   const handleOpenCreate = () => {

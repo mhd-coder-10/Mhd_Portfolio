@@ -24,27 +24,35 @@ export const AdminAbout = () => {
 
   useEffect(() => {
     let mounted = true;
-    const fetchAbout = async () => {
-      try {
-        const res = await adminGetProfile();
-        if (mounted && res.success && res.data?.about) {
-          setAboutData({
-            heading: res.data.about.heading || '',
-            paragraph1: res.data.about.paragraph1 || '',
-            paragraph2: res.data.about.paragraph2 || '',
-            graduationText: res.data.about.graduationText || '',
-            pillars: res.data.about.pillars || [],
-          });
+      const fetchAbout = async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+          const res = await adminGetProfile();
+          if (mounted && res.success && res.data?.about) {
+            setAboutData({
+              heading: res.data.about.heading || '',
+              paragraph1: res.data.about.paragraph1 || '',
+              paragraph2: res.data.about.paragraph2 || '',
+              graduationText: res.data.about.graduationText || '',
+              pillars: res.data.about.pillars || [],
+            });
+          }
+        } catch (err) {
+          showToast('Failed to load about section data', 'error');
+        } finally {
+          if (mounted && !silent) setLoading(false);
         }
-      } catch (err) {
-        showToast('Failed to load about section data', 'error');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchAbout();
-    return () => { mounted = false; };
-  }, [showToast]);
+      };
+      fetchAbout();
+
+      const handleRefresh = () => fetchAbout(true);
+      window.addEventListener('admin:refresh', handleRefresh);
+
+      return () => {
+        mounted = false;
+        window.removeEventListener('admin:refresh', handleRefresh);
+      };
+    }, [showToast]);
 
   const handlePillarChange = (index, field, value) => {
     setAboutData((prev) => {

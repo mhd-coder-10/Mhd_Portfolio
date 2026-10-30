@@ -31,33 +31,41 @@ export const AdminHero = () => {
 
   useEffect(() => {
     let mounted = true;
-    const fetchHero = async () => {
-      try {
-        const res = await adminGetProfile();
-        if (mounted && res.success && res.data?.hero) {
-          setHeroData({
-            rotatingRoles: res.data.hero.rotatingRoles || [],
-            badgeText: res.data.hero.badgeText || 'Available for Full-Stack Roles',
-            primaryCtaText: res.data.hero.primaryCtaText || 'View My Work',
-            primaryCtaLink: res.data.hero.primaryCtaLink || '#projects',
-            secondaryCtaText: res.data.hero.secondaryCtaText || 'Download Resume',
-            stats: res.data.hero.stats || {
-              mcaCpi: 8.45,
-              enterpriseApps: 3,
-              qaReliability: 100,
-              techStacks: 10,
-            },
-          });
+      const fetchHero = async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+          const res = await adminGetProfile();
+          if (mounted && res.success && res.data?.hero) {
+            setHeroData({
+              rotatingRoles: res.data.hero.rotatingRoles || [],
+              badgeText: res.data.hero.badgeText || 'Available for Full-Stack Roles',
+              primaryCtaText: res.data.hero.primaryCtaText || 'View My Work',
+              primaryCtaLink: res.data.hero.primaryCtaLink || '#projects',
+              secondaryCtaText: res.data.hero.secondaryCtaText || 'Download Resume',
+              stats: res.data.hero.stats || {
+                mcaCpi: 8.45,
+                enterpriseApps: 3,
+                qaReliability: 100,
+                techStacks: 10,
+              },
+            });
+          }
+        } catch (err) {
+          showToast('Failed to load hero configuration', 'error');
+        } finally {
+          if (mounted && !silent) setLoading(false);
         }
-      } catch (err) {
-        showToast('Failed to load hero configuration', 'error');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchHero();
-    return () => { mounted = false; };
-  }, [showToast]);
+      };
+      fetchHero();
+
+      const handleRefresh = () => fetchHero(true);
+      window.addEventListener('admin:refresh', handleRefresh);
+
+      return () => {
+        mounted = false;
+        window.removeEventListener('admin:refresh', handleRefresh);
+      };
+    }, [showToast]);
 
   const handleAddRole = () => {
     if (!newRole.trim()) return;

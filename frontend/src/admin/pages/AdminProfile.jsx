@@ -32,33 +32,41 @@ export const AdminProfile = () => {
 
   useEffect(() => {
     let mounted = true;
-    const fetchProfile = async () => {
-      try {
-        const res = await adminGetProfile();
-        if (mounted && res.success && res.data) {
-          setFormData({
-            name: res.data.name || '',
-            shortName: res.data.shortName || '',
-            title: res.data.title || '',
-            headline: res.data.headline || '',
-            location: res.data.location || '',
-            email: res.data.email || '',
-            phone: res.data.phone || '',
-            displayPhone: res.data.displayPhone || '',
-            status: res.data.status || '',
-            bio: res.data.bio || '',
-            profileImage: res.data.profileImage || '',
-          });
+      const fetchProfile = async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+          const res = await adminGetProfile();
+          if (mounted && res.success && res.data) {
+            setFormData({
+              name: res.data.name || '',
+              shortName: res.data.shortName || '',
+              title: res.data.title || '',
+              headline: res.data.headline || '',
+              location: res.data.location || '',
+              email: res.data.email || '',
+              phone: res.data.phone || '',
+              displayPhone: res.data.displayPhone || '',
+              status: res.data.status || '',
+              bio: res.data.bio || '',
+              profileImage: res.data.profileImage || '',
+            });
+          }
+        } catch (err) {
+          showToast('Failed to load profile data', 'error');
+        } finally {
+          if (mounted && !silent) setLoading(false);
         }
-      } catch (err) {
-        showToast('Failed to load profile data', 'error');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchProfile();
-    return () => { mounted = false; };
-  }, [showToast]);
+      };
+      fetchProfile();
+
+      const handleRefresh = () => fetchProfile(true);
+      window.addEventListener('admin:refresh', handleRefresh);
+
+      return () => {
+        mounted = false;
+        window.removeEventListener('admin:refresh', handleRefresh);
+      };
+    }, [showToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

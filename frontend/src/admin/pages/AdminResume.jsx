@@ -61,7 +61,15 @@ export const AdminResume = () => {
 
   useEffect(() => {
     fetchResumeSettings();
+
+    // Listen to admin topbar refresh event for seamless in-place data update
+    const handleRefresh = () => {
+      fetchResumeSettings();
+    };
+    window.addEventListener('admin:refresh', handleRefresh);
+
     return () => {
+      window.removeEventListener('admin:refresh', handleRefresh);
       if (pendingPreviewUrl) {
         URL.revokeObjectURL(pendingPreviewUrl);
       }

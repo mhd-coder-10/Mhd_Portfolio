@@ -28,25 +28,34 @@ export const AdminDashboard = () => {
   useEffect(() => {
     let mounted = true;
 
-    const loadStats = async () => {
-      try {
-        const res = await adminGetStats(token);
-        if (mounted && res.success) {
-          setStats(res.stats);
-          setRecentMessages(res.recentMessages || []);
+      const loadStats = async (isSilent = false) => {
+        if (!isSilent) setLoading(true);
+        try {
+          const res = await adminGetStats(token);
+          if (mounted && res.success) {
+            setStats(res.stats);
+            setRecentMessages(res.recentMessages || []);
+          }
+        } catch (err) {
+          console.error('Failed to load dashboard stats:', err);
+        } finally {
+          if (mounted && !isSilent) setLoading(false);
         }
-      } catch (err) {
-        console.error('Failed to load dashboard stats:', err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+      };
 
-    loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
+      loadStats();
+
+      // Listen to admin topbar refresh event for seamless in-place data update
+      const handleRefresh = () => {
+        loadStats(true);
+      };
+      window.addEventListener('admin:refresh', handleRefresh);
+
+      return () => {
+        mounted = false;
+        window.removeEventListener('admin:refresh', handleRefresh);
+      };
+    }, [token]);
 
   if (loading) {
     return (

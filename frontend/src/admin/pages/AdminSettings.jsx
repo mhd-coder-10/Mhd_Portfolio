@@ -99,6 +99,16 @@ export const AdminSettings = () => {
 
   useEffect(() => {
     fetchSettings();
+
+    // Listen to admin topbar refresh event for seamless in-place data update
+    const handleRefresh = () => {
+      fetchSettings();
+    };
+    window.addEventListener('admin:refresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('admin:refresh', handleRefresh);
+    };
   }, []);
 
   // SEO Save

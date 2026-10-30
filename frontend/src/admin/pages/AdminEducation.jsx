@@ -80,6 +80,16 @@ export const AdminEducation = () => {
 
   useEffect(() => {
     fetchData();
+
+    // Listen to admin topbar refresh event for seamless in-place data update
+    const handleRefresh = () => {
+      fetchData();
+    };
+    window.addEventListener('admin:refresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('admin:refresh', handleRefresh);
+    };
   }, []);
 
   const handleOpenCreate = () => {

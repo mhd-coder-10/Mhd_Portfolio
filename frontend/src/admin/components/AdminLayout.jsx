@@ -118,8 +118,6 @@ export const AdminLayout = () => {
   }, [location.pathname]);
 
   const { refreshPortfolio } = usePortfolioData();
-  const { showToast } = useToast();
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isPageRefreshing, setIsPageRefreshing] = useState(false);
 
   const handlePageRefresh = async () => {
@@ -134,13 +132,10 @@ export const AdminLayout = () => {
       console.error('Refresh portfolio error:', err);
     }
 
-    // Trigger in-place re-mount & fresh data fetch of active page
-    setRefreshKey((prev) => prev + 1);
-
-    // Custom event for any component listening
+    // Custom event to trigger background refetch without unmounting or hiding content
     window.dispatchEvent(new CustomEvent('admin:refresh', { detail: { timestamp: Date.now() } }));
 
-    // Keep spin active for 650ms for smooth user feedback
+    // Keep spin active for 650ms for smooth visual feedback
     setTimeout(() => {
       setIsPageRefreshing(false);
     }, 650);
@@ -414,8 +409,8 @@ export const AdminLayout = () => {
           </div>
         </header>
 
-          {/* Mobile Pull-to-Refresh Indicator Banner (Touch gesture only, never on button click) */ }
-      {(pullY > 15 || isPullRefreshing) && (
+        {/* Mobile Pull-to-Refresh Indicator Banner (Touch gesture only, never on button click) */}
+        {(pullY > 15 || isPullRefreshing) && (
           <div
             style={{
               position: 'fixed',
@@ -451,9 +446,7 @@ export const AdminLayout = () => {
 
         {/* Content Outlet */}
         <main className="admin-content">
-          <div key={refreshKey} style={{ minHeight: '100%', width: '100%' }}>
-            <Outlet context={{ refreshKey, isPageRefreshing, handlePageRefresh }} />
-          </div>
+          <Outlet context={{ isPageRefreshing, handlePageRefresh }} />
         </main>
       </div>
 

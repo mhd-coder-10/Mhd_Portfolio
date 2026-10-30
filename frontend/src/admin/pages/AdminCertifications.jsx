@@ -75,6 +75,16 @@ export const AdminCertifications = () => {
 
   useEffect(() => {
     fetchCertifications();
+
+    // Listen to admin topbar refresh event for seamless in-place data update
+    const handleRefresh = () => {
+      fetchCertifications();
+    };
+    window.addEventListener('admin:refresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('admin:refresh', handleRefresh);
+    };
   }, []);
 
   const handleOpenCreate = () => {
