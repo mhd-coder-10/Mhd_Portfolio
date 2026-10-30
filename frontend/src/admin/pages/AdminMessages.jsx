@@ -17,6 +17,7 @@ import {
   Clock,
   Inbox,
   Sparkles,
+  RotateCw,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import {
@@ -48,6 +49,7 @@ export const AdminMessages = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [inboxRefreshing, setInboxRefreshing] = useState(false);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -67,6 +69,18 @@ export const AdminMessages = () => {
       showToast('Failed to load messages.', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInboxRefresh = async () => {
+    setInboxRefreshing(true);
+    try {
+      await fetchMessages();
+      showToast('Inbox messages refreshed!', 'success');
+    } catch {
+      showToast('Failed to refresh inbox.', 'error');
+    } finally {
+      setTimeout(() => setInboxRefreshing(false), 500);
     }
   };
 
@@ -210,6 +224,18 @@ export const AdminMessages = () => {
             }}
           >
             Read
+          </button>
+
+          <button
+            type="button"
+            className="admin-btn admin-btn-sm admin-btn-secondary"
+            onClick={handleInboxRefresh}
+            disabled={loading || inboxRefreshing}
+            title="Refresh messages inbox"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            <RotateCw size={13} className={inboxRefreshing ? 'admin-spinner' : ''} />
+            <span>Refresh</span>
           </button>
         </div>
 

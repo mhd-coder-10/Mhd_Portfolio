@@ -25,6 +25,8 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { usePortfolioData } from '../../context/PortfolioContext';
+import { useToast } from './AdminToast';
 import '../../styles/admin.css';
 
 const navGroups = [
@@ -84,7 +86,7 @@ export const AdminLayout = () => {
       const next = !prev;
       try {
         localStorage.setItem('admin_sidebar_pinned', String(next));
-      } catch (e) {}
+      } catch (e) { }
       return next;
     });
   };
@@ -115,6 +117,36 @@ export const AdminLayout = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  const { refreshPortfolio } = usePortfolioData();
+  const { showToast } = useToast();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isPageRefreshing, setIsPageRefreshing] = useState(false);
+
+  const handlePageRefresh = async () => {
+    if (isPageRefreshing) return;
+    setIsPageRefreshing(true);
+
+    try {
+      if (typeof refreshPortfolio === 'function') {
+        await refreshPortfolio().catch(() => { });
+      }
+    } catch (err) {
+      console.error('Refresh portfolio error:', err);
+    }
+
+    // Trigger in-place re-mount & fresh data fetch of active page
+    setRefreshKey((prev) => prev + 1);
+
+    // Custom event for any component listening
+    window.dispatchEvent(new CustomEvent('admin:refresh', { detail: { timestamp: Date.now() } }));
+
+    // Keep spin active for 650ms for smooth user feedback
+    setTimeout(() => {
+      setIsPageRefreshing(false);
+      showToast('Page data refreshed!', 'success');
+    }, 650);
+  };
+
   // Mobile Pull-to-Refresh Gesture Listener
   const [pullY, setPullY] = useState(0);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -134,7 +166,7 @@ export const AdminLayout = () => {
     };
 
     const handleTouchMove = (e) => {
-      if (!isPullingRef.current || isPullRefreshing) return;
+      if (!isPullingRef.current || isPullRefreshing || isPageRefreshing) return;
       const currentY = e.touches[0].clientY;
       const diff = currentY - touchStartY.current;
       const currentScroll = window.scrollY || document.documentElement.scrollTop || 0;
@@ -151,233 +183,240 @@ export const AdminLayout = () => {
     const handleTouchEnd = () => {
       if (!isPullingRef.current) return;
       isPullingRef.current = false;
-      if (pullY >= 50 && !isPullRefreshing) {
-        setIsPullRefreshing(true);
-        setPullY(55);
-        setTimeout(() => {
-          window.location.reload();
-        }, 300);
-      } else {
-        setPullY(0);
-      }
-    };
+        if (pullY >= 50 && !isPullRefreshing && !isPageRefreshing) {
+          setIsPullRefreshing(true);
+          setPullY(55);
+          handlePageRefresh().finally(() => {
+            setTimeout(() => {
+              setIsPullRefreshing(false);
+              setPullY(0);
+            }, 650);
+          });
+        } else {
+          setPullY(0);
+        }
+      };
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+      window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [pullY, isPullRefreshing]);
+      return () => {
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
+      };
+}, [pullY, isPullRefreshing, isPageRefreshing]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
+const handleLogout = () => {
+  logout();
+  navigate('/admin/login');
+};
 
-  // Build current breadcrumb title
-  const currentPath = location.pathname;
-  let pageTitle = 'Dashboard';
-  for (const group of navGroups) {
-    for (const item of group.items) {
-      if (currentPath === item.path) {
-        pageTitle = item.label;
-        break;
-      }
+// Build current breadcrumb title
+const currentPath = location.pathname;
+let pageTitle = 'Dashboard';
+for (const group of navGroups) {
+  for (const item of group.items) {
+    if (currentPath === item.path) {
+      pageTitle = item.label;
+      break;
     }
   }
+}
 
-  return (
-    <div className="admin-layout-root">
-      {/* Mobile Backdrop */}
-      {sidebarOpen && (
+return (
+  <div className="admin-layout-root">
+    {/* Mobile Backdrop */}
+    {sidebarOpen && (
+      <div
+        onClick={() => setSidebarOpen(false)}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 95,
+        }}
+      />
+    )}
+
+    {/* Reopen Floating Trigger & Left Edge Hover Trigger (IntellMeet pattern) */}
+    {!isPinned && !isHovered && (
+      <>
         <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 95,
-          }}
+          className="admin-sidebar-hover-zone"
+          onMouseEnter={() => setIsHovered(true)}
         />
-      )}
+        <button
+          type="button"
+          className="admin-sidebar-reopen-tab"
+          onMouseEnter={() => setIsHovered(true)}
+          onClick={() => {
+            setIsHovered(true);
+            togglePin();
+          }}
+          title="Open Sidebar"
+        >
+          <ChevronRight size={15} />
+        </button>
+      </>
+    )}
 
-      {/* Reopen Floating Trigger & Left Edge Hover Trigger (IntellMeet pattern) */}
-      {!isPinned && !isHovered && (
-        <>
-          <div
-            className="admin-sidebar-hover-zone"
-            onMouseEnter={() => setIsHovered(true)}
-          />
-          <button
-            type="button"
-            className="admin-sidebar-reopen-tab"
-            onMouseEnter={() => setIsHovered(true)}
-            onClick={() => {
-              setIsHovered(true);
-              togglePin();
-            }}
-            title="Open Sidebar"
-          >
-            <ChevronRight size={15} />
-          </button>
-        </>
-      )}
-
-      {/* IntellMeet Style Sidebar: Fully open or completely closed with hover & pin */}
-      <aside
-        className={`admin-sidebar ${isPinned || isHovered ? 'open-flow' : 'closed-flow'} ${isPinned ? 'pinned' : ''} ${sidebarOpen ? 'open' : ''}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onWheel={handleSidebarWheel}
-      >
-        <div className="admin-sidebar-header">
-          <Link to="/admin/dashboard" className="admin-brand">
-            <div className="admin-brand-icon">
-              <Sparkles size={20} />
+    {/* IntellMeet Style Sidebar: Fully open or completely closed with hover & pin */}
+    <aside
+      className={`admin-sidebar ${isPinned || isHovered ? 'open-flow' : 'closed-flow'} ${isPinned ? 'pinned' : ''} ${sidebarOpen ? 'open' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onWheel={handleSidebarWheel}
+    >
+      <div className="admin-sidebar-header">
+        <Link to="/admin/dashboard" className="admin-brand">
+          <div className="admin-brand-icon">
+            <Sparkles size={20} />
+          </div>
+          <div className="admin-brand-text">
+            <div style={{ lineHeight: 1.2, fontWeight: 700 }}>
+              <span>Momin </span>
+              <span style={{ color: 'var(--accent-cyan)' }}>M.</span>
             </div>
-            <div className="admin-brand-text">
-              <div style={{ lineHeight: 1.2, fontWeight: 700 }}>
-                <span>Momin </span>
-                <span style={{ color: 'var(--accent-cyan)' }}>M.</span>
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-                Portfolio Admin
-              </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+              Portfolio Admin
             </div>
-          </Link>
+          </div>
+        </Link>
 
-          {/* Mobile Close Button */}
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            className="mobile-hamburger-btn"
-            style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-          >
-            <X size={20} />
-          </button>
+        {/* Mobile Close Button */}
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          className="mobile-hamburger-btn"
+          style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* WORKSPACE MENU Header with Pin/Unpin Button */}
+      <div className="admin-menu-section-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>
+          <span style={{ color: 'var(--accent-cyan)', fontSize: '1.2rem', lineHeight: 0.8 }}>•</span>
+          <span>WORKSPACE MENU</span>
+        </div>
+        <button
+          type="button"
+          onClick={togglePin}
+          className={`admin-pin-toggle-btn ${isPinned ? 'pinned' : ''}`}
+          title={isPinned ? 'Sidebar is pinned open. Click to unpin (auto-closes when cursor leaves)' : 'Click to pin sidebar open permanently'}
+        >
+          {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+        </button>
+      </div>
+
+      <nav className="admin-sidebar-nav">
+        {navGroups.map((group) => (
+          <div key={group.title} style={{ marginBottom: '0.5rem' }}>
+            <div className="admin-nav-section-title">{group.title}</div>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+                  title={item.label}
+                >
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      <div className="admin-sidebar-footer">
+        <div className="admin-sidebar-user-avatar">
+          {(admin?.name || 'A').charAt(0).toUpperCase()}
+        </div>
+        <div className="admin-sidebar-user-info">
+          <div className="admin-sidebar-user-name">
+            {admin?.name || 'Administrator'}
+          </div>
+          <div className="admin-sidebar-user-email">
+            {admin?.email || 'admin@portfolio.dev'}
+          </div>
         </div>
 
-        {/* WORKSPACE MENU Header with Pin/Unpin Button */}
-        <div className="admin-menu-section-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>
-            <span style={{ color: 'var(--accent-cyan)', fontSize: '1.2rem', lineHeight: 0.8 }}>•</span>
-            <span>WORKSPACE MENU</span>
-          </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          title="Log Out"
+          className="admin-sidebar-logout-btn"
+          aria-label="Log out of admin panel"
+        >
+          <LogOut size={16} />
+        </button>
+      </div>
+    </aside>
+
+    {/* Main Content Area */}
+    <div className="admin-main">
+      {/* Topbar */}
+      <header className="admin-topbar">
+        <div className="admin-topbar-left">
           <button
             type="button"
-            onClick={togglePin}
-            className={`admin-pin-toggle-btn ${isPinned ? 'pinned' : ''}`}
-            title={isPinned ? 'Sidebar is pinned open. Click to unpin (auto-closes when cursor leaves)' : 'Click to pin sidebar open permanently'}
+            onClick={handleToggleHamburger}
+            className="admin-topbar-toggle-btn"
+            title={isPinned ? 'Collapse sidebar' : 'Open & Pin sidebar'}
+            aria-label="Toggle navigation sidebar"
           >
-            {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+            <Menu size={18} />
           </button>
+
+          <div className="admin-breadcrumbs">
+            <Link to="/admin/dashboard">Admin</Link>
+            <ChevronRight size={13} className="admin-breadcrumbs-separator" />
+            <span className="admin-breadcrumbs-current">{pageTitle}</span>
+          </div>
         </div>
 
-        <nav className="admin-sidebar-nav">
-          {navGroups.map((group) => (
-            <div key={group.title} style={{ marginBottom: '0.5rem' }}>
-              <div className="admin-nav-section-title">{group.title}</div>
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
-                    title={item.label}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </NavLink>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="admin-sidebar-footer">
-          <div className="admin-sidebar-user-avatar">
-            {(admin?.name || 'A').charAt(0).toUpperCase()}
-          </div>
-          <div className="admin-sidebar-user-info">
-            <div className="admin-sidebar-user-name">
-              {admin?.name || 'Administrator'}
-            </div>
-            <div className="admin-sidebar-user-email">
-              {admin?.email || 'admin@portfolio.dev'}
-            </div>
-          </div>
-
+        <div className="admin-topbar-right">
+          {/* Dedicated Page Refresh Button (Desktop & Mobile) */}
           <button
             type="button"
-            onClick={handleLogout}
-            title="Log Out"
-            className="admin-sidebar-logout-btn"
-            aria-label="Log out of admin panel"
+            onClick={handlePageRefresh}
+            disabled={isPageRefreshing}
+            className={`admin-topbar-refresh-btn ${isPageRefreshing ? 'refreshing' : ''}`}
+            title="Refresh current page data"
+            aria-label="Refresh current page"
           >
-            <LogOut size={16} />
+            <RotateCw
+              size={13}
+              className={`admin-refresh-spin-icon ${isPageRefreshing ? 'admin-spinner' : ''}`}
+            />
+            <span className="admin-topbar-refresh-text">
+              {isPageRefreshing ? 'Refreshing...' : 'Refresh'}
+            </span>
           </button>
+
+          {/* View live public portfolio */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="admin-btn admin-btn-secondary admin-btn-sm"
+            title="Open public portfolio website in new tab"
+          >
+            <span className="admin-view-portfolio-text">View Site</span>
+            <ExternalLink size={14} />
+          </a>
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content Area */}
-      <div className="admin-main">
-        {/* Topbar */}
-        <header className="admin-topbar">
-          <div className="admin-topbar-left">
-            <button
-              type="button"
-              onClick={handleToggleHamburger}
-              className="admin-topbar-toggle-btn"
-              title={isPinned ? 'Collapse sidebar' : 'Open & Pin sidebar'}
-              aria-label="Toggle navigation sidebar"
-            >
-              <Menu size={18} />
-            </button>
-
-            <div className="admin-breadcrumbs">
-              <Link to="/admin/dashboard">Admin</Link>
-              <ChevronRight size={13} className="admin-breadcrumbs-separator" />
-              <span className="admin-breadcrumbs-current">{pageTitle}</span>
-            </div>
-          </div>
-
-          <div className="admin-topbar-right">
-            {/* Dedicated Page Refresh Button (Desktop & Mobile) */}
-            <button
-              type="button"
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="admin-topbar-refresh-btn"
-              title="Refresh page to load latest updates"
-              aria-label="Refresh page"
-            >
-              <RotateCw size={13} className="admin-refresh-spin-icon" />
-              <span className="admin-topbar-refresh-text">Refresh</span>
-            </button>
-
-            {/* View live public portfolio */}
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="admin-btn admin-btn-secondary admin-btn-sm"
-              title="Open public portfolio website in new tab"
-            >
-              <span className="admin-view-portfolio-text">View Site</span>
-              <ExternalLink size={14} />
-            </a>
-          </div>
-        </header>
-
-        {/* Mobile Pull-to-Refresh Indicator Banner */}
-        {(pullY > 15 || isPullRefreshing) && (
+      {/* Mobile Pull-to-Refresh Indicator Banner */}
+        {(pullY > 15 || isPullRefreshing || isPageRefreshing) && (
           <div
             style={{
               position: 'fixed',
@@ -402,22 +441,24 @@ export const AdminLayout = () => {
           >
             <RotateCw
               size={14}
+              className={isPullRefreshing || isPageRefreshing ? 'admin-spinner' : ''}
               style={{
-                animation: isPullRefreshing || pullY >= 50 ? 'spin 0.75s linear infinite' : 'none',
-                transform: `rotate(${pullY * 4.5}deg)`,
+                transform: !isPullRefreshing && !isPageRefreshing ? `rotate(${pullY * 4.5}deg)` : undefined,
               }}
             />
-            <span>{isPullRefreshing ? 'Reloading page...' : pullY >= 50 ? 'Release to reload' : 'Pull down to refresh'}</span>
+            <span>{isPullRefreshing || isPageRefreshing ? 'Refreshing data...' : pullY >= 50 ? 'Release to refresh' : 'Pull down to refresh'}</span>
           </div>
         )}
 
-        {/* Content Outlet */}
-        <main className="admin-content">
-          <Outlet />
-        </main>
-      </div>
+      {/* Content Outlet */}
+      <main className="admin-content">
+        <div key={refreshKey} style={{ minHeight: '100%', width: '100%' }}>
+          <Outlet context={{ refreshKey, isPageRefreshing, handlePageRefresh }} />
+        </div>
+      </main>
+    </div>
 
-      <style>{`
+    <style>{`
         .admin-topbar-refresh-btn {
           display: inline-flex;
           align-items: center;
@@ -432,15 +473,18 @@ export const AdminLayout = () => {
           cursor: pointer;
           transition: all var(--transition-fast);
         }
-        .admin-topbar-refresh-btn:hover,
-        .admin-topbar-refresh-btn:active {
+        .admin-topbar-refresh-btn:hover:not(:disabled),
+        .admin-topbar-refresh-btn:active:not(:disabled) {
           background: rgba(56, 189, 248, 0.22);
           border-color: var(--accent-cyan);
           color: #ffffff;
         }
-        .admin-topbar-refresh-btn:active .admin-refresh-spin-icon {
-          transform: rotate(180deg);
-          transition: transform 0.25s ease;
+        .admin-topbar-refresh-btn:disabled {
+          opacity: 0.75;
+          cursor: not-allowed;
+        }
+        .admin-topbar-refresh-btn .admin-refresh-spin-icon.admin-spinner {
+          animation: adminSpin 0.75s linear infinite !important;
         }
         @media (max-width: 992px) {
           .admin-sidebar {
@@ -456,8 +500,8 @@ export const AdminLayout = () => {
           }
         }
       `}</style>
-    </div>
-  );
+  </div>
+);
 };
 
 export default AdminLayout;
