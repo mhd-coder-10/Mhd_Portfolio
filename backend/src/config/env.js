@@ -9,6 +9,7 @@ const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   MONGODB_URI: process.env.MONGODB_URI || '',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+  BREVO_API_KEY: process.env.BREVO_API_KEY || process.env['BREVO_API-KEY'] || '',
   EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
   EMAIL_PORT: parseInt(process.env.EMAIL_PORT, 10) || 587,
   EMAIL_USER: process.env.EMAIL_USER || '',

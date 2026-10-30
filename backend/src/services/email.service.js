@@ -245,29 +245,169 @@ const createClientConfirmationEmailHtml = (data) => {
 };
 
 /**
+ * Sends transactional email via Brevo REST API (HTTPS port 443).
+ * This completely avoids cloud SMTP port blocks on Render, Vercel, Railway, etc.
+ */
+const sendViaBrevoApi = async ({ sender, to, replyTo, subject, htmlContent, textContent, headers }) => {
+  const apiKey = (
+    process.env.BREVO_API_KEY ||
+    process.env['BREVO_API-KEY'] ||
+    env.BREVO_API_KEY ||
+    ''
+  ).trim();
+
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY is not defined in environment variables');
+  }
+
+  const payload = {
+    sender,
+    to,
+    subject,
+    htmlContent,
+    textContent,
+  };
+
+  if (replyTo) {
+    payload.replyTo = replyTo;
+  }
+
+  if (headers && Object.keys(headers).length > 0) {
+    payload.headers = headers;
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': apiKey,
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const responseData = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMsg =
+      responseData.message ||
+      responseData.error ||
+      `Brevo API responded with status ${response.status}`;
+    throw new Error(errorMsg);
+  }
+
+  return responseData;
+};
+
+/**
  * Send email notifications for a new contact form submission:
  * 1. Delivers complete inquiry details to the Developer (mhd.developer10@gmail.com).
- * 2. Sends an automated confirmation receipt to the Client (contactData.email) with anti-spam compliance.
+ * 2. Sends an automated confirmation receipt to the Client (contactData.email).
+ *
+ * Uses Brevo HTTPS REST API primarily (guaranteed to work on Render cloud platform).
+ * Falls back to Nodemailer SMTP if Brevo is not configured.
  */
 const sendContactNotification = async (contactData) => {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
+
+  const brevoApiKey = (
+    process.env.BREVO_API_KEY ||
+    process.env['BREVO_API-KEY'] ||
+    env.BREVO_API_KEY ||
+    ''
+  ).trim();
+
+  const senderEmail = (process.env.EMAIL_USER || env.EMAIL_USER || 'mhd.developer10@gmail.com').trim();
+  const developerRecipient = (process.env.CONTACT_EMAIL || env.CONTACT_EMAIL || 'mhd.developer10@gmail.com').trim();
+
+  // =========================================================================
+  // PRIORITY 1: Brevo REST API (Cloud/Render production mode via HTTPS port 443)
+  // =========================================================================
+  if (brevoApiKey) {
+    try {
+      console.log('[Email Service] Dispatching emails via Brevo HTTPS REST API...');
+
+      const devPayload = {
+        sender: { name: 'Portfolio Contact Form', email: senderEmail },
+        to: [{ email: developerRecipient, name: 'Momin Mahmmadbhai' }],
+        replyTo: contactData.email ? { email: contactData.email.trim(), name: contactData.name } : undefined,
+        subject: `[Portfolio Inquiry] ${contactData.subject} - from ${contactData.name}`,
+        text: createDeveloperEmailText(contactData),
+        htmlContent: createDeveloperEmailHtml(contactData),
+        textContent: createDeveloperEmailText(contactData),
+        headers: {
+          'X-Mailer': 'Momin-Portfolio-Backend',
+        },
+      };
+
+      const clientPayload = {
+        sender: { name: 'Momin Mahmmadbhai', email: senderEmail },
+        to: [{ email: contactData.email.trim(), name: contactData.name }],
+        replyTo: { email: developerRecipient, name: 'Momin Mahmmadbhai' },
+        subject: `Confirmation: Your message to Momin Mahmmadbhai has been received`,
+        htmlContent: createClientConfirmationEmailHtml(contactData),
+        textContent: createClientConfirmationEmailText(contactData),
+        headers: {
+          'Auto-Submitted': 'auto-replied',
+          'X-Auto-Response-Suppress': 'All',
+          'Precedence': 'bulk',
+          'X-Mailer': 'Momin-Portfolio-Backend',
+        },
+      };
+
+      const [devResult, clientResult] = await Promise.allSettled([
+        sendViaBrevoApi(devPayload),
+        sendViaBrevoApi(clientPayload),
+      ]);
+
+      const devSuccess = devResult.status === 'fulfilled';
+      const clientSuccess = clientResult.status === 'fulfilled';
+
+      if (devSuccess) {
+        console.log(`[Email Service - Brevo] Developer notification sent: ${devResult.value?.messageId || 'Success'}`);
+      } else {
+        console.error(`[Email Service - Brevo Error] Developer notification failed: ${devResult.reason?.message}`);
+      }
+
+      if (clientSuccess) {
+        console.log(`[Email Service - Brevo] Client confirmation sent: ${clientResult.value?.messageId || 'Success'}`);
+      } else {
+        console.error(`[Email Service - Brevo Error] Client confirmation failed: ${clientResult.reason?.message}`);
+      }
+
+      if (devSuccess || clientSuccess) {
+        return {
+          provider: 'brevo',
+          sent: devSuccess || clientSuccess,
+          developerEmail: devSuccess,
+          clientEmail: clientSuccess,
+        };
+      }
+
+      console.warn('[Email Service Warning] Brevo dispatch failed for both. Falling back to Nodemailer SMTP...');
+    } catch (brevoErr) {
+      console.error(`[Email Service Error] Brevo exception: ${brevoErr.message}. Falling back to Nodemailer SMTP...`);
+    }
+  }
+
+  // =========================================================================
+  // PRIORITY 2: Nodemailer SMTP (Fallback for local dev or when Brevo is absent)
+  // =========================================================================
   const transporter = getTransporter();
 
   if (!transporter) {
     console.warn(
-      '[Email Service Warning] EMAIL_PASSWORD is not set in backend/.env. Gmail SMTP authentication requires a 16-character Google App Password (myaccount.google.com/apppasswords).'
+      '[Email Service Warning] Neither BREVO_API_KEY nor EMAIL_PASSWORD is set. Cannot dispatch notification emails.'
     );
     return {
       sent: false,
-      reason: 'EMAIL_PASSWORD missing in .env.',
+      reason: 'No email service credentials configured (missing BREVO_API_KEY and EMAIL_PASSWORD).',
     };
   }
 
-  const senderUser = (process.env.EMAIL_USER || env.EMAIL_USER || 'mhd.developer10@gmail.com').trim();
-  const developerRecipient = (process.env.CONTACT_EMAIL || env.CONTACT_EMAIL || 'mhd.developer10@gmail.com').trim();
-
   // Email 1: Notification to the Developer
   const developerMailOptions = {
-    from: `"Portfolio Contact Form" <${senderUser}>`,
+    from: `"Portfolio Contact Form" <${senderEmail}>`,
     to: developerRecipient,
     replyTo: `"${contactData.name}" <${contactData.email}>`,
     subject: `[Portfolio Inquiry] ${contactData.subject} - from ${contactData.name}`,
@@ -278,9 +418,9 @@ const sendContactNotification = async (contactData) => {
     },
   };
 
-  // Email 2: Confirmation Receipt to the Client (Strict Anti-Spam Headers & Multipart Text+HTML)
+  // Email 2: Confirmation Receipt to the Client
   const clientMailOptions = {
-    from: `"Momin Mahmmadbhai" <${senderUser}>`,
+    from: `"Momin Mahmmadbhai" <${senderEmail}>`,
     to: contactData.email,
     replyTo: developerRecipient,
     subject: `Confirmation: Your message to Momin Mahmmadbhai has been received`,
@@ -304,18 +444,19 @@ const sendContactNotification = async (contactData) => {
     const clientSuccess = clientResult.status === 'fulfilled';
 
     if (devSuccess) {
-      console.log(`[Email Service] Developer notification sent: ${devResult.value.messageId}`);
+      console.log(`[Email Service - SMTP] Developer notification sent: ${devResult.value.messageId}`);
     } else {
-      console.error(`[Email Service Error] Failed to send developer email: ${devResult.reason?.message}`);
+      console.error(`[Email Service - SMTP Error] Failed to send developer email: ${devResult.reason?.message}`);
     }
 
     if (clientSuccess) {
-      console.log(`[Email Service] Client confirmation sent: ${clientResult.value.messageId}`);
+      console.log(`[Email Service - SMTP] Client confirmation sent: ${clientResult.value.messageId}`);
     } else {
-      console.error(`[Email Service Error] Failed to send client confirmation: ${clientResult.reason?.message}`);
+      console.error(`[Email Service - SMTP Error] Failed to send client confirmation: ${clientResult.reason?.message}`);
     }
 
     return {
+      provider: 'nodemailer-smtp',
       sent: devSuccess || clientSuccess,
       developerEmail: devSuccess,
       clientEmail: clientSuccess,
@@ -329,4 +470,5 @@ const sendContactNotification = async (contactData) => {
 module.exports = {
   sendContactNotification,
   getTransporter,
+  sendViaBrevoApi,
 };
