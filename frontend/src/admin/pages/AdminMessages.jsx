@@ -76,7 +76,6 @@ export const AdminMessages = () => {
     setInboxRefreshing(true);
     try {
       await fetchMessages();
-      showToast('Inbox messages refreshed!', 'success');
     } catch {
       showToast('Failed to refresh inbox.', 'error');
     } finally {
