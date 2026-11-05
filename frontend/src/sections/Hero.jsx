@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { GithubIcon, LinkedinIcon, InstagramIcon, TelegramIcon } from '../components/SocialIcons';
 import { checkApiHealth } from '../services/api';
-import AnimatedCounter from '../components/AnimatedCounter';
 import { usePortfolioData } from '../context/PortfolioContext';
 import { useToast } from '../admin/components/AdminToast';
 
@@ -120,6 +119,7 @@ export const Hero = () => {
         paddingBottom: '50px',
         position: 'relative',
         zIndex: 1,
+        marginBottom: '-2rem'
       }}
     >
       <div className="container">
@@ -333,46 +333,6 @@ export const Hero = () => {
               </a>
             </div>
 
-            {/* Key Metrics Counter Strip */}
-            <div
-              className="animate-fade-up delay-450"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '1rem',
-                padding: '1.25rem 1rem',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-lg)',
-                marginBottom: '2rem',
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-                  <AnimatedCounter target={stats.mcaCpi || 8.45} decimals={2} duration={1400} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>MCA CPI</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-indigo)', fontFamily: 'var(--font-mono)' }}>
-                  <AnimatedCounter target={stats.enterpriseApps || 3} suffix="+" duration={1200} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Enterprise Apps</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
-                  <AnimatedCounter target={stats.qaReliability || 100} suffix="%" duration={1600} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>QA Reliability</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-violet)', fontFamily: 'var(--font-mono)' }}>
-                  <AnimatedCounter target={stats.techStacks || 10} suffix="+" duration={1400} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Tech Stacks</div>
-              </div>
-            </div>
-
             {/* Social & Direct Contact Icons */}
             <div
               className="animate-fade-up delay-500"
@@ -385,10 +345,6 @@ export const Hero = () => {
                 borderTop: '1px solid var(--border-subtle)',
               }}
             >
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                CONNECT:
-              </span>
-
               <a
                 href={socialLinks.email}
                 className="social-icon-btn"
@@ -704,7 +660,7 @@ export const Hero = () => {
           }
         }
       `}</style>
-    </section>
+    </section >
   );
 };
 
