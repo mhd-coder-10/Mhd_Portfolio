@@ -335,13 +335,9 @@ export const Hero = () => {
 
             {/* Social & Direct Contact Icons */}
             <div
-              className="animate-fade-up delay-500"
+              className="animate-fade-up delay-500 hero-social-links"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                paddingTop: '1.25rem',
+                paddingTop: '1rem',
                 borderTop: '1px solid var(--border-subtle)',
               }}
             >
@@ -622,6 +618,13 @@ export const Hero = () => {
       </div>
 
       <style>{`
+        .hero-social-links {
+          display: flex;
+          align-items: center;
+          flex-wrap: nowrap;
+          gap: 0.85rem;
+          width: 100%;
+        }
         .social-icon-btn {
           width: 38px;
           height: 38px;
@@ -632,6 +635,7 @@ export const Hero = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
           transition: all var(--transition-normal);
         }
         .social-icon-btn:hover {
@@ -657,6 +661,22 @@ export const Hero = () => {
           }
           .hero-terminal-wrapper {
             max-width: 520px;
+          }
+        }
+        @media (max-width: 640px) {
+          .hero-social-links {
+            flex-wrap: nowrap !important;
+            gap: clamp(0.35rem, 2.2vw, 0.65rem) !important;
+            justify-content: flex-start;
+          }
+          .social-icon-btn {
+            width: clamp(34px, 9vw, 38px) !important;
+            height: clamp(34px, 9vw, 38px) !important;
+            flex-shrink: 0;
+          }
+          .social-icon-btn svg {
+            width: 16px !important;
+            height: 16px !important;
           }
         }
       `}</style>
