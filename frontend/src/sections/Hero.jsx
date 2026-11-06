@@ -622,7 +622,7 @@ export const Hero = () => {
           display: flex;
           align-items: center;
           flex-wrap: nowrap;
-          gap: 1rem;
+          gap: 1.25rem;
           width: 100%;
         }
         .social-icon-btn {
