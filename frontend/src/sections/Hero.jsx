@@ -340,7 +340,7 @@ export const Hero = () => {
                 display: 'flex',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '1.1rem',
+                gap: '1rem',
                 paddingTop: '1.25rem',
                 borderTop: '1px solid var(--border-subtle)',
               }}
