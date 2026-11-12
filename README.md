@@ -61,4 +61,4 @@ npm run dev
 - **Public Portfolio:** `http://localhost:5173`
 - **Admin Panel:** `http://localhost:5173/admin/login`
 - **Backend API:** `http://localhost:5000/api`
-- **Public Portfolio:** `https://mhd-portfolio-one.vercel.app`
+- **Live Portfolio:** `https://mhd-portfolio-one.vercel.app`
