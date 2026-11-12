@@ -16,6 +16,14 @@ const Settings = require('../models/settings.model');
  */
 const getPublicPortfolio = async (req, res, next) => {
   try {
+    // Disable caching completely so visitors always receive the latest live profile updates
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+      'Surrogate-Control': 'no-store',
+    });
+
     const [
       profile,
       experiences,

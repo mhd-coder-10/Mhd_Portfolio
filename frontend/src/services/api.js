@@ -53,7 +53,14 @@ const handleResponse = async (response) => {
  * Fetch unified public portfolio data
  */
 export const fetchPublicPortfolio = async () => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/public/portfolio`);
+  const t = Date.now();
+  const response = await fetch(`${API_BASE_URL}/api/v1/public/portfolio?_t=${t}`, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  });
   return handleResponse(response);
 };
 

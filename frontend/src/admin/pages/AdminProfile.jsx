@@ -80,6 +80,16 @@ export const AdminProfile = () => {
       const res = await adminUpdateProfile(token, formData);
       if (res.success) {
         showToast('Profile information updated successfully!', 'success');
+        try {
+          const raw = localStorage.getItem('momin_portfolio_public_cache');
+          if (raw) {
+            const cached = JSON.parse(raw);
+            if (cached && cached.profile) {
+              cached.profile = { ...cached.profile, ...formData };
+              localStorage.setItem('momin_portfolio_public_cache', JSON.stringify(cached));
+            }
+          }
+        } catch (e) {}
         refreshPortfolio();
       }
     } catch (err) {
@@ -237,12 +247,27 @@ export const AdminProfile = () => {
 
           <ImageUploader
             value={formData.profileImage}
-            onChange={(url) => {
+            onChange={async (url) => {
               setFormData((prev) => ({ ...prev, profileImage: url }));
-              // Proactively persist profile image update
-              adminUpdateProfile(token, { ...formData, profileImage: url })
-                .then(() => refreshPortfolio())
-                .catch((err) => console.warn('Background auto-save notice:', err.message));
+              try {
+                // Immediately persist new profileImage directly to DB
+                await adminUpdateProfile(token, { ...formData, profileImage: url });
+                // Instantly update client cache so public site reflects it immediately
+                try {
+                  const raw = localStorage.getItem('momin_portfolio_public_cache');
+                  if (raw) {
+                    const cached = JSON.parse(raw);
+                    if (cached && cached.profile) {
+                      cached.profile.profileImage = url;
+                      localStorage.setItem('momin_portfolio_public_cache', JSON.stringify(cached));
+                    }
+                  }
+                } catch (e) {}
+                refreshPortfolio();
+                showToast('Profile photo updated and saved!', 'success');
+              } catch (err) {
+                console.warn('Background auto-save notice:', err.message);
+              }
             }}
             onUploadStateChange={setImageUploading}
             label="Avatar / Profile Photo (Featured in Hero & About sections)"

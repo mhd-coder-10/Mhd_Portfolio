@@ -13,7 +13,7 @@ export const personalInfo = {
   phone: '9316515672',
   displayPhone: '+91 93165 15672',
   status: 'Open to Opportunities',
-  profileImage: '/assets/profile-momin.jpg',
+  profileImage: 'https://res.cloudinary.com/ipb9jst1/image/upload/v1793878185/MHD_PORTFOLIO/gj2q7ocnqmyqov9jwkrl.jpg',
   bio: `MCA Graduate and Full-Stack Developer with hands-on experience in architecting modern web applications and scalable backend systems using React.js, Node.js, Express.js, and MongoDB. Skilled in REST API design, database modeling, JWT authentication, and responsive UI engineering. Along with development, experienced in functional testing, API validation, and end-to-end workflow verification to ensure software reliability and security.`,
 };
 

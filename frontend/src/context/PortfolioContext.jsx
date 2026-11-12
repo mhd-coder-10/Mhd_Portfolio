@@ -14,29 +14,62 @@ import defaultSocialLinks from '../config/socialLinks';
 import { fetchPublicPortfolio, API_BASE_URL } from '../services/api';
 
 const PortfolioContext = createContext(null);
+const CACHE_KEY = 'momin_portfolio_public_cache';
+
+const getInitialCachedData = () => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
 
 export const PortfolioProvider = ({ children }) => {
-  const [personalInfo, setPersonalInfo] = useState(defaultPersonalInfo);
-  const [experiences, setExperiences] = useState(defaultExperiences);
-  const [skillCategories, setSkillCategories] = useState(defaultSkillCategories);
-  const [projects, setProjects] = useState(defaultProjects);
-  const [projectCategories, setProjectCategories] = useState([]);
-  const [educationData, setEducationData] = useState(defaultEducationData);
-  const [languages, setLanguages] = useState(defaultLanguages);
-  const [certificationData, setCertificationData] = useState(defaultCertificationData);
-  const [certifications, setCertifications] = useState([defaultCertificationData]);
+  const cachedData = getInitialCachedData();
+
+  const [personalInfo, setPersonalInfo] = useState(() => {
+    if (cachedData?.profile) {
+      return {
+        ...defaultPersonalInfo,
+        ...cachedData.profile,
+        profileImage: cachedData.profile.profileImage || defaultPersonalInfo.profileImage,
+        hero: cachedData.profile.hero || defaultPersonalInfo.hero,
+        about: cachedData.profile.about || defaultPersonalInfo.about,
+      };
+    }
+    return defaultPersonalInfo;
+  });
+
+  const [experiences, setExperiences] = useState(() => (Array.isArray(cachedData?.experiences) ? cachedData.experiences : defaultExperiences));
+  const [skillCategories, setSkillCategories] = useState(() => (Array.isArray(cachedData?.skillCategories) ? cachedData.skillCategories : defaultSkillCategories));
+  const [projects, setProjects] = useState(() => (Array.isArray(cachedData?.projects) ? cachedData.projects : defaultProjects));
+  const [projectCategories, setProjectCategories] = useState(() => (Array.isArray(cachedData?.projectCategories) ? cachedData.projectCategories : []));
+  const [educationData, setEducationData] = useState(() => (Array.isArray(cachedData?.education) ? cachedData.education : defaultEducationData));
+  const [languages, setLanguages] = useState(() => (Array.isArray(cachedData?.languages) ? cachedData.languages : defaultLanguages));
+  const [certificationData, setCertificationData] = useState(() => (cachedData?.certification || defaultCertificationData));
+  const [certifications, setCertifications] = useState(() => (Array.isArray(cachedData?.certifications) ? cachedData.certifications : [defaultCertificationData]));
   const [socialLinks, setSocialLinks] = useState(defaultSocialLinks);
-  const [contactSettings, setContactSettings] = useState(null);
-  const [settings, setSettings] = useState(null);
+  const [contactSettings, setContactSettings] = useState(() => cachedData?.contactSettings || null);
+  const [settings, setSettings] = useState(() => cachedData?.settings || null);
   const [developmentApproach, setDevelopmentApproach] = useState(defaultApproach);
   const [navigationLinks, setNavigationLinks] = useState(defaultNavLinks);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (retryCount = 0) => {
     try {
       const res = await fetchPublicPortfolio();
       if (res && res.success && res.data) {
         const d = res.data;
+
+        // Persist fresh data to localStorage cache
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(d));
+        } catch (e) {}
 
         // 1. Personal & Hero & About Info
         if (d.profile) {
@@ -154,7 +187,14 @@ export const PortfolioProvider = ({ children }) => {
         }
       }
     } catch (err) {
-      console.warn('[PortfolioContext] Using static fallback data:', err.message);
+      console.warn('[PortfolioContext] Live fetch notice:', err.message);
+      // Auto-retry for Render cloud cold-starts (retries up to 4 times with backoff)
+      if (retryCount < 4) {
+        const delay = Math.min(3000 * Math.pow(1.5, retryCount), 12000);
+        setTimeout(() => {
+          loadData(retryCount + 1);
+        }, delay);
+      }
     } finally {
       setLoading(false);
     }
