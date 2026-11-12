@@ -53,7 +53,7 @@ npm run install:all
 - Configure `.env` inside `backend/` (MongoDB URI, JWT secret, Admin credentials, Cloudinary, Port).
 - `frontend/.env` is already pre-configured for development.
 
-### 3. Start Application
+### 3. Start Web
 ```bash
 npm run dev
 ```
@@ -61,3 +61,4 @@ npm run dev
 - **Public Portfolio:** `http://localhost:5173`
 - **Admin Panel:** `http://localhost:5173/admin/login`
 - **Backend API:** `http://localhost:5000/api`
+- **Public Portfolio:** `https://mhd-portfolio-one.vercel.app`
